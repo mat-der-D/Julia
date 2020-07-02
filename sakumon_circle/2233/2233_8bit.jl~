@@ -1,0 +1,88 @@
+using Combinatorics
+
+function detect_first(lst::Array{Int8,1}, val::Int8)
+  for i = 1:length(lst)
+    if lst[i] == val
+      return i
+    end
+  end
+  throw("[detect_first] 'lst' should include 'val'.")
+end
+
+function split(lsts::Array{Array{Int8,1},1})
+  local new_lsts::Array{Array{Int8,1},1} = []
+  for lst in lsts
+    for elem in Set(lst)
+      i = detect_first(lst, elem)
+      new_lst = lst[1:i-1]
+      append!(new_lst, [elem+1, elem+1])
+      append!(new_lst, lst[i+1:length(lst)])
+      if !(new_lst in new_lsts)
+        push!(new_lsts, new_lst)
+      end
+    end
+  end
+  return new_lsts
+end
+
+function is_one_three_power(lst::Array{Int8,1})
+  local sumval::Rational{Int8} = 0
+  local N::Int8 = length(lst)
+  for i = 1:N
+    sumval += (N - i + 1)//(3^lst[i])
+    if sumval > 1
+      return false
+    end
+  end
+  return sumval == 1
+end
+
+function alert_good_an_lst(an_lsts::Array{Array{Int8,1},1})
+  for lst in an_lsts
+    good_an_lsts::Array{Array{Int8,1},1} = []
+    done_an_lsts::Array{Array{Int8,1},1} = []
+    for x in permutations(lst)
+      if !(x in done_an_lsts)
+        push!(done_an_lsts, x)
+    	if is_one_three_power(x)
+    	  print(reverse(x), "\n")
+    	  push!(good_an_lsts, x)
+    	end
+      end
+    end
+  end
+end
+
+function save_good_an_lst(an_lsts::Array{Array{Int8,1},1}, f)
+  for lst in an_lsts
+    good_an_lsts::Array{Array{Int8,1},1} = []
+    done_an_lsts::Array{Array{Int8,1},1} = []
+    for x in permutations(lst)
+      if !(x in done_an_lsts)
+        push!(done_an_lsts, x)
+    	if is_one_three_power(x)
+    	  println(f, reverse(x))
+    	  push!(good_an_lsts, x)
+    	end
+      end
+    end
+  end
+end
+
+#---------------------------------------------------------
+
+const max_dim = 9
+an_lsts = [[0]]
+
+f = open("an_8bit.txt", "w")
+
+for dim = 1:max_dim
+  println(f, "---------- dim = ",dim," ----------")
+  if dim > 1
+    global an_lsts = split(an_lsts)
+  end
+  save_good_an_lst(an_lsts, f)
+end
+println(f, "========== END ==========")
+
+close(f)
