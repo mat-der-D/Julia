@@ -1,0 +1,28 @@
+using Combinatorics
+
+function split!(lsts::Set{Array{UInt8,1}})
+  new_lsts = Vector{UInt8}[]
+  for lst in lsts
+    for elem in Set(lst)
+      lst_dummy = copy(lst)
+      x = findfirst(isequal(elem), lst_dummy)
+      if x == 1
+        popfirst!(lst_dummy)
+  	new_lst = UInt8[elem+1, elem+1]
+  	append!(new_lst, lst_dummy)
+  	push!(new_lsts, new_lst)
+      elseif x == length(lst)
+        pop!(lst_dummy)
+  	append!(lst_dummy, UInt8[elem+1, elem+1])
+  	push!(new_lsts, lst_dummy)
+      else
+        new_lst = lst[1:x-1]
+  	append!(new_lst, UInt8[elem+1, elem+1])
+  	append!(new_lst, lst[x+1:length(lst)])
+  	push!(new_lsts, new_lst)
+      end
+    end
+  end
+  empty!(lsts)
+  union!(lsts, Set(new_lsts))
+end
