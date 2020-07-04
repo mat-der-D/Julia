@@ -3,6 +3,8 @@ function split!(lsts::Set{Array{Int64,1}}; type::Int64=1)
     split_fast!(lsts)
   elseif type == 4
     split_faster!(lsts)
+  elseif type == 5
+    split_view!(lsts)
   else
     new_lsts = [split_lst(lst, elem, type = type)
 	        for lst in lsts
@@ -26,6 +28,29 @@ function split_fast!(lsts::Set{Array{Int64,1}})
       new_lst[x:x+1] = Int64[elem+1, elem+1]
       if x != N_lst
       	new_lst[x+2:N_lst+1] = lst[x+1:N_lst]
+      end
+      push!(new_lsts, new_lst[:])
+    end
+  end
+  
+  empty!(lsts)
+  union!(lsts, Set(new_lsts))
+end
+
+function split_view!(lsts::Set{Array{Int64,1}})
+  N_lst = length( pop!(copy(lsts)) )
+  new_lst = Array{Int64,1}(undef, N_lst+1)
+  new_lsts = Array{Int64,1}[]
+
+  for lst in lsts
+    for elem in Set(lst)
+      x = findfirst(isequal(elem), lst)
+      if x != 1
+        new_lst[1:x-1] = view(lst, 1:x-1)
+      end
+      new_lst[x:x+1] = Int64[elem+1, elem+1]
+      if x != N_lst
+      	new_lst[x+2:N_lst+1] = view(lst, x+1:N_lst)
       end
       push!(new_lsts, new_lst[:])
     end

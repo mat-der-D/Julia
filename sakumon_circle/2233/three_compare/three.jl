@@ -4,6 +4,8 @@ function is_one_three_power(lst::Array{Int64,1}; type=1)::Bool
     return is_one_three_power_1(lst)
   elseif type == 2
     return is_one_three_power_2(lst)
+  elseif type == 3
+    return is_one_three_power_3(lst)
   end
 
 end
@@ -22,6 +24,14 @@ end
 
 function is_one_three_power_2(lst::Array{Int64,1})::Bool
   return sum(map(x -> x//3^lst[x], 1:length(lst))) == 1
+end
+
+function is_one_three_power_3(lst::Array{Int64,1})::Bool
+  return sum(x//3^lst[x] for x in 1:length(lst)) == 1
+end
+
+function is_one_three_power_4(lst::Array{Int64,1})::Bool
+  return sum((x -> x//3^lst[x]).(1:length(lst))) == 1
 end
 
 function test(type::Int64)
