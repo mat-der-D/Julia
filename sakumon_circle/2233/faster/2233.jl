@@ -25,29 +25,8 @@ function split!(lsts::Set{Array{Int64,1}})
   union!(lsts, Set(new_lsts))
 end
 
-function f(x::Int64, lst::Array{Int64,1})::Rational{Int64}
-  return x//3^lst[x]
-end
-
 @inline function is_one_three_power(lst::Array{Int64,1})::Bool
-  # return sum(map(x::Int64 -> x//3^lst[x], 1:length(lst))) == 1//1
   return sum(map(x -> x//3^lst[x], 1:length(lst))) == 1//1
-end
-
-function alert_good_an_lst(an_lsts::Array{Array{Int64,1},1})
-  for lst in an_lsts
-    good_an_lsts::Array{Array{Int64,1},1} = []
-    done_an_lsts::Array{Array{Int64,1},1} = []
-    for x in permutations(lst)
-      if !(x in done_an_lsts)
-        push!(done_an_lsts, x)
-    	if is_one_three_power(x)
-    	  print(reverse(x), "\n")
-    	  push!(good_an_lsts, x)
-    	end
-      end
-    end
-  end
 end
 
 function save_good_an_lst(lsts::Set{Array{Int64,1}}, f::IOStream)
@@ -60,12 +39,33 @@ function save_good_an_lst(lsts::Set{Array{Int64,1}}, f::IOStream)
   end
 end
 
+function save_good_an_lst_perm(lsts::Set{Array{Int64,1}}, f::IOStream)
+  for lst in lsts
+    for an_lst in permutations(lst)
+      if is_one_three_power(an_lst)
+        println(f, an_lst)
+      end
+    end
+  end
+end
+
+function save_good_an_lst_exit(lsts::Set{Array{Int64,1}}, f::IOStream)
+  for lst in lsts
+    for an_lst in Set(permutations(lst))
+      if is_one_three_power(an_lst)
+        println(f, an_lst)
+	quit()
+      end
+    end
+  end
+end
+
 function main()
-  start_dim = 1
-  max_dim = 10
+  start_dim = 9
+  max_dim = 9
   an_lsts = Set([[0]])
 
-  filename = "an_"*string(start_dim)*"-"*string(max_dim)*".txt"
+  filename = "an_"*string(start_dim)*"-"*string(max_dim)*"_exit.txt"
   f = open(filename, "w")
 
   for dim = 1:max_dim
@@ -85,4 +85,4 @@ function main()
 
 end
 
-main()
+# main()

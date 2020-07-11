@@ -1,0 +1,51 @@
+---------- dim = 1 ----------
+all=1, candidate=1
+---------- dim = 2 ----------
+all=1, candidate=1
+---------- dim = 3 ----------
+all=1, candidate=1
+---------- dim = 4 ----------
+all=2, candidate=1
+---------- dim = 5 ----------
+all=3, candidate=3
+---------- dim = 6 ----------
+all=5, candidate=5
+---------- dim = 7 ----------
+all=9, candidate=8
+---------- dim = 8 ----------
+all=16, candidate=14
+---------- dim = 9 ----------
+all=28, candidate=26
+---------- dim = 10 ----------
+all=50, candidate=48
+---------- dim = 11 ----------
+all=89, candidate=84
+---------- dim = 12 ----------
+all=159, candidate=151
+---------- dim = 13 ----------
+all=285, candidate=270
+---------- dim = 14 ----------
+all=510, candidate=483
+---------- dim = 15 ----------
+all=914, candidate=865
+---------- dim = 16 ----------
+all=1639, candidate=1551
+---------- dim = 17 ----------
+all=2938, candidate=2783
+---------- dim = 18 ----------
+all=5269, candidate=4990
+---------- dim = 19 ----------
+all=9451, candidate=8951
+---------- dim = 20 ----------
+all=16952, candidate=16060
+---------- dim = 21 ----------
+all=30410, candidate=28810
+---------- dim = 22 ----------
+all=54555, candidate=51684
+---------- dim = 23 ----------
+all=97871, candidate=92721
+---------- dim = 24 ----------
+all=175586, candidate=166344
+---------- dim = 25 ----------
+all=315016, candidate=298429
+========== END ==========
