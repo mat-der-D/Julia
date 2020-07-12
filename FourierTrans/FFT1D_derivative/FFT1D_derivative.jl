@@ -33,7 +33,12 @@ function k_x(x_func::Vector{Float64})::Vector{Complex{Float64}}
     return fft(complex(x_func))
 end
 
-function x_k(k_func::Vector{Complex{Float64}})::Vector{Float64}
+function x_k(k_func::Vector{Complex{Float64}};
+	     dealiasing = true)::Vector{Float64}
+    if dealiasing
+        len_k = length(k_func)
+	k_func[div(len_k, 3):div(2*len_k + 2, 3)] .= 0.0
+    end
     return real(ifft(k_func))
 end
 
@@ -43,11 +48,12 @@ function k_DX_k(k_func::Vector{Complex{Float64}},
 end
 
 function x_DX_x(x_func::Vector{Float64},
-		config::FFT1D_config)::Vector{Float64}
-    return x_k(k_DX_k(k_x(x_func), config))
+		config::FFT1D_config;
+		dealiasing = true)::Vector{Float64}
+    return x_k(k_DX_k(k_x(x_func), config), dealiasing = dealiasing)
 end
 
-function test_FFT1D_derivative()
+function test_FFT1D_derivative(;dealiasing = true)
 
     # *** parameter setting ***
     nx = 50	    # # of grid points
@@ -58,7 +64,9 @@ function test_FFT1D_derivative()
 
     # *** differentiate by spectral method ***
     x_func = exp.(sin.(x_X))
-    x_dfunc = x_DX_x(x_func, c)
+    k_func = k_x(x_func)
+    k_dfunc = k_DX_k(k_func, c)
+    x_dfunc = x_k(k_dfunc, dealiasing = dealiasing)
 
     # *** exact derivative ***
     x_exact = cos.(x_X) .* x_func
