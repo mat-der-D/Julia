@@ -1,0 +1,13 @@
+[構想]
+* 一次元モデルの計算をやってみたい.
+* Berkley モデルの実装楽しそう. ただ実装間に合うか...
+
+
+[Fourier変換のモジュール]
+pkg> add AbstractFFTs.jl
+  -> エラーを吐いて入れられず.
+
+FFTW のパッケージがありそう↓
+https://github.com/JuliaMath/FFTW.jl
+
+pkg> add FFTW
