@@ -128,6 +128,10 @@ Base.:/(f::yx_Func,
 	g::Float64) = yx_Func(f.vals / g,
 		      	      f.config)
 
+Base.:sin(f::yx_Func) = yx_Func(sin.(f.vals), f.config)
+Base.:cos(f::yx_Func) = yx_Func(cos.(f.vals), f.config)
+Base.:exp(f::yx_Func) = yx_Func(exp.(f.vals), f.config)
+
 
 # ***** lk_Func *************************
 mutable struct lk_Func
@@ -163,10 +167,6 @@ Base.:/(f::lk_Func,
 Base.:/(f::lk_Func,
 	g::Complex{Float64}) = lk_Func(f.vals / g,
 		      	               f.config)
-
-Base.:sin(f::yx_Func) = yx_Func(sin.(f.vals), f.config)
-Base.:cos(f::yx_Func) = yx_Func(cos.(f.vals), f.config)
-Base.:exp(f::yx_Func) = yx_Func(exp.(f.vals), f.config)
 
 
 # ***** Fourier Transformation **********
