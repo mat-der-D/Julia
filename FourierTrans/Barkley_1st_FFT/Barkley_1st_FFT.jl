@@ -15,6 +15,12 @@ struct setup_Barkley
 
 end
 
+function init_setup_Barkley(;zeta, D, delta, eps_1, eps_2,
+	 		     U_0, U_bar, r, dt, nt)
+    return setup_Barkley(zeta, D, delta, eps_1, eps_2,
+    	   		 U_0, U_bar, r, dt, nt)
+end
+
 function x_x_time_evolve_Barkley_x_x(
 		x_q, x_u,
 		s::setup_Barkley,
@@ -78,12 +84,13 @@ end
 
 function test_Barkley()
 
-    c = init_FFT1D(128, 0., 300.)
-    s = setup_Barkley(0.8, 0.5, 0.1, 0.1, 0.2, 1., 2., 10.0,
-      		      1e-2, 100)
+    c = init_FFT1D(512, 0., 30.)
+    s = init_setup_Barkley(
+      	zeta=0.8, D=0.5, delta=0.1, eps_1=0.1, eps_2=0.2,
+	U_0=2., U_bar=1., r=10.0, dt=1e-4, nt=1000)
 
-    x_q = @. exp(sin(2pi*c.x_X/c.xr))
-    x_u = @. exp(cos(2pi*c.x_X/c.xr))
+    x_q = @. exp(sin(16pi*c.x_X/c.xr))
+    x_u = @. exp(cos(16pi*c.x_X/c.xr))
 
     open("testcase.txt", "w") do f
         output_x_x(f, x_q, x_u, c)
