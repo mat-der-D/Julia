@@ -249,24 +249,3 @@ function test_FFT2D_derivative(;dealiasing=true)
     end
 
 end
-
-
-
-function test()
-
-    # *** parameter setting ***
-    nx = 2	    # # of grid points
-    ny = 3	    # # of grid points
-    xmin = 0.0	    # leftmost(lowest) value of x
-    xmax = 4pi	    # rightmost(highest) value of x
-    ymin = 0.0	    # leftmost(lowest) value of y
-    ymax = 2pi	    # rightmost(highest) value of y
-    c = configure_FFT2D(nx, ny,
-		        xmin, xmax, ymin, ymax)
-
-    yx_X = yx_Func(c.yx_X, c)
-    yx_Y = yx_Func(c.yx_Y, c)
-
-    println((yx_X + yx_Y + yx_X).vals)
-
-end
