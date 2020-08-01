@@ -121,6 +121,13 @@ Base.:*(f::Float64,
 	g::yx_Func) = yx_Func(f * g.vals,
 		              g.config)
 
+Base.:/(f::yx_Func,
+	g::yx_Func) = yx_Func(f.vals ./ g.vals,
+		      	      f.config)
+Base.:/(f::yx_Func,
+	g::Float64) = yx_Func(f.vals / g,
+		      	      f.config)
+
 
 # ***** lk_Func *************************
 mutable struct lk_Func
@@ -134,9 +141,9 @@ Base.:+(f::lk_Func,
 	g::lk_Func) = lk_Func(f.vals + g.vals,
 		      	      f.config)
 Base.:+(f::lk_Func,
-	g::Float64) = lk_Func(f.vals + g,
-		      	      f.config)
-Base.:+(f::Float64,
+	g::Complex{Float64}) = lk_Func(f.vals + g,
+		      	               f.config)
+Base.:+(f::Complex{Float64},
 	g::lk_Func) = lk_Func(f + g.vals,
 		      	      g.config)			      
 
@@ -144,11 +151,19 @@ Base.:*(f::lk_Func,
 	g::lk_Func) = lk_Func(f.vals .* g.vals,
 		      	      f.config)
 Base.:*(f::lk_Func,
-	g::Float64) = lk_Func(f.vals * g,
-		      	      f.config)
-Base.:*(f::Float64,
+	g::Complex{Float64}) = lk_Func(f.vals * g,
+		      	               f.config)
+Base.:*(f::Complex{Float64},
 	g::lk_Func) = lk_Func(f * g.vals,
 		              g.config)
+
+Base.:/(f::lk_Func,
+	g::lk_Func) = lk_Func(f.vals ./ g.vals,
+		      	      f.config)
+Base.:/(f::lk_Func,
+	g::Complex{Float64}) = lk_Func(f.vals / g,
+		      	               f.config)
+
 Base.:sin(f::yx_Func) = yx_Func(sin.(f.vals), f.config)
 Base.:cos(f::yx_Func) = yx_Func(cos.(f.vals), f.config)
 Base.:exp(f::yx_Func) = yx_Func(exp.(f.vals), f.config)
@@ -232,5 +247,26 @@ function test_FFT2D_derivative(;dealiasing=true)
 	    println(f)
 	end
     end
+
+end
+
+
+
+function test()
+
+    # *** parameter setting ***
+    nx = 2	    # # of grid points
+    ny = 3	    # # of grid points
+    xmin = 0.0	    # leftmost(lowest) value of x
+    xmax = 4pi	    # rightmost(highest) value of x
+    ymin = 0.0	    # leftmost(lowest) value of y
+    ymax = 2pi	    # rightmost(highest) value of y
+    c = configure_FFT2D(nx, ny,
+		        xmin, xmax, ymin, ymax)
+
+    yx_X = yx_Func(c.yx_X, c)
+    yx_Y = yx_Func(c.yx_Y, c)
+
+    println((yx_X + yx_Y + yx_X).vals)
 
 end
