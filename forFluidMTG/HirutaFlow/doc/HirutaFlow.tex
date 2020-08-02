@@ -1,0 +1,160 @@
+\documentclass[12pt, a4j]{jsarticle}
+\usepackage[%
+top    = 30truemm,%
+bottom = 30truemm,%
+left   = 25truemm,%
+right  = 25truemm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{bm,braket,ascmac,enumitem}
+\usepackage{mathtools}
+\mathtoolsset{showonlyrefs=true}
+
+
+\newcommand{\p}{\partial}
+\renewcommand{\Re}{\mathrm{Re}}
+
+
+\begin{document}
+
+基礎方程式:
+\begin{gather}
+    \p_{t} \bm{u} 
+    + \bm{u} \cdot \nabla \bm{u}
+    = - \nabla P 
+      - \dfrac{1}{\Re_{0}} (\bm{u} - U_{y} \hat{\bm{y}})
+      + \dfrac{1}{\Re} \nabla^{2} \bm{u}
+      + \sin{(n y)} \hat{\bm{x}},
+    \\
+    \nabla \cdot \bm{u}
+    = 0,
+    \\
+    \bm{U}
+    = \dfrac{a}{4 \pi^{2}} \int dxdy \bm{u}
+    = (0, U_{y})
+    \quad : \text{const.}
+\end{gather}
+
+新しい変数:
+\begin{equation}
+    \bm{v} 
+    = \bm{u} - \bm{U}
+    = \nabla \times (\psi \hat{\bm{z}})
+    = (\p_{y} \psi) \hat{\bm{x}}
+      + (- \p_{x} \psi) \hat{\bm{y}}
+\end{equation}
+
+変換した基礎方程式:
+\begin{gather}
+    \p_{t} \bm{v} 
+    + \bm{v} \cdot \nabla \bm{v}
+    + \bm{U} \cdot \nabla \bm{v}
+    = - \nabla P 
+      - \dfrac{1}{\Re_{0}} \bm{v}
+      + \dfrac{1}{\Re} \nabla^{2} \bm{v}
+      + \sin{(n y)} \hat{\bm{x}},
+    \\
+    \nabla \cdot \bm{v}
+    = 0,
+    \\
+    \dfrac{a}{4 \pi^{2}} \int dxdy \bm{v}
+    = 0
+\end{gather}
+
+$\nabla \times$ を掛けたい:
+\begin{gather}
+    \nabla \times \bm{v}
+    = \nabla \times \nabla \times (\psi \hat{\bm{z}})
+    = \nabla (\nabla \cdot \psi \hat{\bm{z}})
+      - \nabla^{2} (\psi \hat{\bm{z}})
+    = (- \nabla^{2} \psi) \hat{\bm{z}}
+    \\
+    \nabla \times (\bm{v} \cdot \nabla \bm{v})
+    = J(\psi, \nabla^{2} \psi) \hat{\bm{z}},
+    \\
+    \nabla \times (\bm{U} \cdot \nabla \bm{v})
+    = \bm{U} \cdot \nabla (\nabla \times \bm{v})
+    = (- U_{y} \p_{y} \nabla^{2} \psi) \hat{\bm{z}}
+\end{gather}
+ただし
+\begin{equation}
+    J(a, b)
+    = (\p_{x} a) (\p_{y} b) - (\p_{y} a) (\p_{x} b)
+\end{equation}
+
+基礎方程式に $\nabla \times$ を掛ける:
+\begin{equation}
+    - \p_{t} \nabla^{2} \psi
+    + J(\psi, \nabla^{2} \psi)
+    - U_{y} \p_{y} \nabla^{2} \psi
+    = \dfrac{1}{\Re_{0}} \nabla^{2} \psi
+      - \dfrac{1}{\Re} \nabla^{2} \nabla^{2} \psi
+      - n \cos{(n y)}
+\end{equation}
+整理:
+\begin{align}
+    \p_{t} \nabla^{2} \psi
+    &= n \cos{(n y)}
+       - \dfrac{1}{\Re_{0}} \nabla^{2} \psi
+       - U_{y} \p_{y} \nabla^{2} \psi
+       + \dfrac{1}{\Re} \nabla^{2} \nabla^{2} \psi \\
+    &\hphantom{{}={}}
+       + J(\psi, \nabla^{2} \psi)
+\end{align}
+
+線形部分:
+\begin{equation}
+    \p_{t} \nabla^{2} \psi
+    = n \cos{(n y)}
+      - \dfrac{1}{\Re_{0}} \nabla^{2} \psi
+      - U_{y} \p_{y} \nabla^{2} \psi
+      + \dfrac{1}{\Re} \nabla^{2} \nabla^{2} \psi 
+\end{equation}
+$\bar{\omega} = \nabla^{2} \psi$:
+\begin{equation}
+    \p_{t} \bar{\omega}
+    = n \cos{(n y)}
+      - \dfrac{1}{\Re_{0}} \bar{\omega}
+      - U_{y} \p_{y} \bar{\omega}
+      + \dfrac{1}{\Re} \nabla^{2} \bar{\omega}
+\end{equation}
+Fourier 変換, $F[\bar{\omega}](k, \ell)$:
+\begin{equation}
+    \p_{t} F[\bar{\omega}]
+    = F[n \cos{(n y)}]
+      - \dfrac{1}{\Re_{0}} F[\bar{\omega}]
+      - i \ell U_{y} F[\bar{\omega}]
+      - \dfrac{1}{\Re} (k^{2} + \ell^{2}) F[\bar{\omega}]
+\end{equation}
+線形項を積分:
+\begin{gather}
+    \p_{t}\{ F[\bar{\omega}] e(t) \}
+    = F[n \cos{(n y)}] e(t),
+    \\
+    e(t) = \exp{(t \alpha)},
+    \\
+    \alpha
+    =
+                 \dfrac{1}{\Re_{0}}
+                 + i \ell U_{y}
+                 + \dfrac{1}{\Re} (k^{2} + \ell^{2})
+\end{gather}
+積分!!:
+\begin{align}
+    F[\bar{\omega}](t)
+    &= F[\bar{\omega}](t_{0}) e(- t + t_{0})
+       + e(- t) \int_{t_{0}}^{t} F[n \cos{(n y)}]e(s) d s
+    \\
+    &= F[\bar{\omega}](t_{0}) e(- t + t_{0})
+       + F[n \cos{(n y)}]
+       \cdot \dfrac{1 - e(- t + t_{0})}{\alpha}
+    \\
+    &= \left(
+           F[\bar{\omega}](t_{0})
+           - \dfrac{F[n \cos{(n y)}]}{\alpha}
+       \right) 
+           e(- t + t_{0})
+       + \dfrac{F[n \cos{(n y)}]}{\alpha}
+\end{align}
+
+
+\end{document}
