@@ -94,10 +94,10 @@ Base.:+(f::yx_Func,
 	g::yx_Func) = yx_Func(f.vals + g.vals,
 		      	      f.config)
 Base.:+(f::yx_Func,
-	g::Float64) = yx_Func(f.vals + g,
+	g::Float64) = yx_Func(f.vals + g*ones(size(f.vals)),
 		      	      f.config)
 Base.:+(f::Float64,
-	g::yx_Func) = yx_Func(f + g.vals,
+	g::yx_Func) = yx_Func(f*ones(size(g.vals)) + g.vals,
 		      	      g.config)			      
 
 Base.:-(f::yx_Func) = yx_Func(- f.vals, f.config)
@@ -105,10 +105,10 @@ Base.:-(f::yx_Func,
 	g::yx_Func) = yx_Func(f.vals - g.vals,
 		      	      f.config)
 Base.:-(f::yx_Func,
-	g::Float64) = yx_Func(f.vals - g,
+	g::Float64) = yx_Func(f.vals - g*ones(size(f.vals)),
 		      	      f.config)
 Base.:-(f::Float64,
-	g::yx_Func) = yx_Func(f - g.vals,
+	g::yx_Func) = yx_Func(f*ones(size(f.vals)) - g.vals,
 		      	      g.config)
 
 Base.:*(f::yx_Func,
@@ -120,6 +120,8 @@ Base.:*(f::yx_Func,
 Base.:*(f::Float64,
 	g::yx_Func) = yx_Func(f * g.vals,
 		              g.config)
+Base.:*(f::Int64, g::yx_Func) = float(f) * g
+Base.:*(f::yx_Func, g::Int64) = f * float(g)
 
 Base.:/(f::yx_Func,
 	g::yx_Func) = yx_Func(f.vals ./ g.vals,
@@ -131,6 +133,10 @@ Base.:/(f::yx_Func,
 Base.:sin(f::yx_Func) = yx_Func(sin.(f.vals), f.config)
 Base.:cos(f::yx_Func) = yx_Func(cos.(f.vals), f.config)
 Base.:exp(f::yx_Func) = yx_Func(exp.(f.vals), f.config)
+
+function yx_Func_undef(c::FFT2D_config)
+    return yx_Func(Matrix{Float64}(undef, c.ny, c.nx), c)
+end
 
 
 # ***** lk_Func *************************
@@ -145,11 +151,31 @@ Base.:+(f::lk_Func,
 	g::lk_Func) = lk_Func(f.vals + g.vals,
 		      	      f.config)
 Base.:+(f::lk_Func,
-	g::Complex{Float64}) = lk_Func(f.vals + g,
+	g::Complex{Float64}) = lk_Func(f.vals + g*ones(size(f.vals)),
 		      	               f.config)
 Base.:+(f::Complex{Float64},
-	g::lk_Func) = lk_Func(f + g.vals,
-		      	      g.config)			      
+	g::lk_Func) = lk_Func(f*ones(size(g.vals)) + g.vals,
+		      	      g.config)
+Base.:+(f::lk_Func,
+	g::Float64) = f + complex(g)
+Base.:+(f::Float64,
+	g::lk_Func) = complex(f) + g
+
+Base.:-(f::lk_Func) = lk_Func(- f.vals, f.config)
+Base.:-(f::lk_Func,
+	g::lk_Func) = lk_Func(f.vals - g.vals, f.config)
+Base.:-(f::lk_Func,
+	g::Complex{Float64}) = lk_Func(f.vals - g*ones(size(f.vals)),
+		      	             f.config)
+Base.:-(f::Complex{Float64},
+	g::lk_Func) = lk_Func(f*ones(size(g.vals)) - g.vals,
+		      	      g.config)
+Base.:-(f::lk_Func,
+	g::Float64) = lk_Func(f.vals - g*ones(size(f.vals)),
+		      	      f.config)
+Base.:-(f::Float64,
+	g::lk_Func) = lk_Func(f*ones(size(g.vals)) - g.vals,
+		      	      g.config)
 
 Base.:*(f::lk_Func,
 	g::lk_Func) = lk_Func(f.vals .* g.vals,
@@ -160,6 +186,18 @@ Base.:*(f::lk_Func,
 Base.:*(f::Complex{Float64},
 	g::lk_Func) = lk_Func(f * g.vals,
 		              g.config)
+Base.:*(f::lk_Func,
+	g::Float64) = lk_Func(f.vals * g,
+		      	      f.config)
+Base.:*(f::Float64,
+	g::lk_Func) = lk_Func(f * g.vals,
+		              g.config)
+Base.:*(f::lk_Func,
+	g::Int64) = lk_Func(f.vals * g,
+		      	    f.config)
+Base.:*(f::Int64,
+	g::lk_Func) = lk_Func(f * g.vals,
+		              g.config)
 
 Base.:/(f::lk_Func,
 	g::lk_Func) = lk_Func(f.vals ./ g.vals,
@@ -167,6 +205,20 @@ Base.:/(f::lk_Func,
 Base.:/(f::lk_Func,
 	g::Complex{Float64}) = lk_Func(f.vals / g,
 		      	               f.config)
+Base.:/(f::lk_Func,
+	g::Float64) = lk_Func(f.vals / g,
+		      	      f.config)
+Base.:/(f::lk_Func,
+	g::Int64) = lk_Func(f.vals / g,
+		      	    f.config)
+
+Base.:sin(f::lk_Func) = lk_Func(sin.(f.vals), f.config)
+Base.:cos(f::lk_Func) = lk_Func(cos.(f.vals), f.config)
+Base.:exp(f::lk_Func) = lk_Func(exp.(f.vals), f.config)
+
+function lk_Func_undef(c::FFT2D_config)
+    return lk_Func(Matrix{Complex{Float64}}(undef, c.ny, c.nx), c)
+end
 
 
 # ***** Fourier Transformation **********
