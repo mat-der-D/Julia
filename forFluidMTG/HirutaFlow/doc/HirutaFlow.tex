@@ -100,61 +100,66 @@ $\nabla \times$ を掛けたい:
     &\hphantom{{}={}}
        + J(\psi, \nabla^{2} \psi)
 \end{align}
+$\omega
+ = ( - \nabla^{2} \psi ) \cdot \hat{\bm{z}}
+ = ( \nabla \times \bm{v} ) \cdot \hat{\bm{z}}$
+とおいて整理:
+\begin{align}
+    \p_{t} \omega
+    &= - n \cos{(n y)}
+       - \dfrac{1}{\Re_{0}} \omega
+       - U_{y} \p_{y} \omega
+       + \dfrac{1}{\Re} \nabla^{2} \omega \\
+    &\hphantom{{}={}}
+       + J(\psi, \omega)
+\end{align}
 
-線形部分:
+
+線形部分 $+$ cos 部分:
 \begin{equation}
-    \p_{t} \nabla^{2} \psi
-    = n \cos{(n y)}
-      - \dfrac{1}{\Re_{0}} \nabla^{2} \psi
-      - U_{y} \p_{y} \nabla^{2} \psi
-      + \dfrac{1}{\Re} \nabla^{2} \nabla^{2} \psi 
+    \p_{t} \omega
+    = - n \cos{(n y)}
+      - \dfrac{1}{\Re_{0}} \omega
+      - U_{y} \p_{y} \omega
+      + \dfrac{1}{\Re} \nabla^{2} \omega
 \end{equation}
-$\bar{\omega} = \nabla^{2} \psi$:
+Fourier 変換 $F[\omega](k, \ell)$:
 \begin{equation}
-    \p_{t} \bar{\omega}
-    = n \cos{(n y)}
-      - \dfrac{1}{\Re_{0}} \bar{\omega}
-      - U_{y} \p_{y} \bar{\omega}
-      + \dfrac{1}{\Re} \nabla^{2} \bar{\omega}
+    \p_{t} F[\omega]
+    = - F[n \cos{(n y)}]
+      - \dfrac{1}{\Re_{0}} F[\omega]
+      - i \ell U_{y} F[\omega]
+      - \dfrac{1}{\Re} (k^{2} + \ell^{2}) F[\omega]
 \end{equation}
-Fourier 変換, $F[\bar{\omega}](k, \ell)$:
-\begin{equation}
-    \p_{t} F[\bar{\omega}]
-    = F[n \cos{(n y)}]
-      - \dfrac{1}{\Re_{0}} F[\bar{\omega}]
-      - i \ell U_{y} F[\bar{\omega}]
-      - \dfrac{1}{\Re} (k^{2} + \ell^{2}) F[\bar{\omega}]
-\end{equation}
-線形項を積分:
+整理:
 \begin{gather}
-    \p_{t}\{ F[\bar{\omega}] e(t) \}
-    = F[n \cos{(n y)}] e(t),
+    \p_{t} \{ F[\omega] e(t) \} 
+    = - F[n \cos{(n y)}] e(t),
     \\
     e(t) = \exp{(t \alpha)},
     \\
     \alpha
-    =
-                 \dfrac{1}{\Re_{0}}
-                 + i \ell U_{y}
-                 + \dfrac{1}{\Re} (k^{2} + \ell^{2})
+    = \dfrac{1}{\Re_{0}}
+      + i \ell U_{y}
+      + \dfrac{1}{\Re} (k^{2} + \ell^{2})
 \end{gather}
-積分!!:
+積分:
 \begin{align}
-    F[\bar{\omega}](t)
-    &= F[\bar{\omega}](t_{0}) e(- t + t_{0})
-       + e(- t) \int_{t_{0}}^{t} F[n \cos{(n y)}]e(s) d s
+    F[\omega](t)
+    &= F[\omega](t_{0}) e(- t + t_{0})
+       - e(- t) \int_{t_{0}}^{t} F[n \cos{(n y)}] e(s) d s
     \\
-    &= F[\bar{\omega}](t_{0}) e(- t + t_{0})
-       + F[n \cos{(n y)}]
-       \cdot \dfrac{1 - e(- t + t_{0})}{\alpha}
+    &= F[\omega](t_{0}) e(- t + t_{0})
+       - F[n \cos{(n y)}]
+         \cdot \dfrac{1 - e(- t + t_{0})}{\alpha}
     \\
     &= \left(
-           F[\bar{\omega}](t_{0})
-           - \dfrac{F[n \cos{(n y)}]}{\alpha}
-       \right) 
-           e(- t + t_{0})
-       + \dfrac{F[n \cos{(n y)}]}{\alpha}
+           F[\omega](t_{0})
+           + \dfrac{F[ n \cos{(n y)} ]}{\alpha}
+       \right) e(- t + t_{0})
+       - \dfrac{F[ n \cos{(n y)} ]}{\alpha}
 \end{align}
+
 
 
 \end{document}
