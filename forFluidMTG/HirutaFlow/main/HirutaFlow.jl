@@ -240,12 +240,12 @@ function test_HirutaFlow()
     ymin = 0.0	    	 # minimum value of y
     ymax = 2pi	    	 # maximum value of y
     # -- Time --
-    nt = 25000		# # of time steps
-    nt_output = 25000 	# output every nt_output
+    nt = 10000		# # of time steps
+    nt_output = 40 	# output every nt_output
     t_st = 0.	    	# start time
     t_ed = 50.0      	# end time
     # -- Physical Params --
-    Re_inv = 1.0 / 8.0
+    Re_inv = 1.0 / 30.0
     κ = 0.0 # sqrt(30)
     U_y = 0.0
     n_force = 4
@@ -275,11 +275,8 @@ function test_HirutaFlow()
         for it = 1:s.nt
             # lk_ω = lk_TimeDevelopHeun_lk(lk_ω, s, tit)
 	    lk_ω = lk_TimeDevelopRK4_lk(lk_ω, s, tit)
-	    if it % 500 == 0
-	        println("t = ", it * s.dt)
-	    end
             if it % nt_output == 0
-	        # println("t = ", it * s.dt)
+	        println("t = ", it * s.dt)
                 output_flowField(f, lk_ω)
 
             end
@@ -308,53 +305,4 @@ end
 function set_initial_condition(lk_ω::lk_Func)
     c = lk_ω.config
     lk_ω.vals = rand(c.ny, c.nx)
-end
-
-
-function test_ncosny()
-
-    # *** parameter setting ***
-    # -- Space --
-    aspect = 4		 # aspect ratio
-    nx = 64*aspect    	 # # of grid points
-    ny = 64	      	 # # of grid points
-    xmin = 0.0	      	 # minimum value of x
-    xmax = 2pi*aspect    # maximum value of x
-    ymin = 0.0	    	 # minimum value of y
-    ymax = 2pi	    	 # maximum value of y
-    # -- Time --
-    nt = 25000		# # of time steps
-    nt_output = 25000 	# output every nt_output
-    t_st = 0.	    	# start time
-    t_ed = 50.0      	# end time
-    # -- Physical Params --
-    Re_inv = 1.0 / 8.0
-    κ = 0.0 # sqrt(30)
-    U_y = 0.0
-    n_force = 4
-
-    c = configure_FFT2D(nx, ny,
-		        xmin, xmax, ymin, ymax)
-    s = set_HirutaFlow(nt,
-		       t_st, t_ed,
-		       Re_inv, κ, U_y, n_force)    
-
-    yx_X = yx_Func(c.yx_X, c)
-    yx_Y = yx_Func(c.yx_Y, c)
-    println("s.n_force = ", s.n_force)
-    yx_ncosny = s.n_force * cos(s.n_force * yx_Y)
-    yx_ncosy = s.n_force * cos(yx_Y)
-    open("test_ncosny.dat", "w") do f
-        for ix = 1:c.nx
-	    for iy = 1:c.ny
-	        println(f, yx_X.vals[iy, ix], " ",
-			   yx_Y.vals[iy, ix], " ",
-			   yx_ncosny.vals[iy, ix], " ",
-			   yx_ncosy.vals[iy, ix])
-	    end
-	    println(f)
-	end
-	println(f)
-    end
-
 end

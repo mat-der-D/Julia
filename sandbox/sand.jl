@@ -1,15 +1,12 @@
-function sum_by_view(lst::Array{Float64,1})::Float64
-  return sum(view(lst, :))
+struct simple
+
+  x::Float64
+  s::String
+
 end
 
-function sum_by_slice(lst::Array{Float64,1})::Float64
-  return sum(lst[:])
-end
+Base.:+(f::simple, g::simple) = simple(f.x + g.x, f.s*g.s)
+Base.:sin(f::simple) = simple(sin(f.x), "sin"*f.s)
 
-function sum_by_for(lst::Array{Float64,1})::Float64
-  sumval = Float64(0)
-  for x in lst
-    sumval += x
-  end
-  return sumval
-end
+a = simple(1., "one")
+print(sin(a))
