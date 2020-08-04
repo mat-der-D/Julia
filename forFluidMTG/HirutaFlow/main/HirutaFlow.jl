@@ -240,10 +240,11 @@ function test_HirutaFlow()
     ymin = 0.0	    	 # minimum value of y
     ymax = 2pi	    	 # maximum value of y
     # -- Time --
-    nt = 10000		# # of time steps
-    nt_output = 40 	# output every nt_output
+    nt = 4000		# # of time steps
+    nt_output = 20 	# output every nt_output
+    nt_st_out = 2000	# start ouput at it = nt_st_out
     t_st = 0.	    	# start time
-    t_ed = 50.0      	# end time
+    t_ed = 200.0      	# end time
     # -- Physical Params --
     Re_inv = 1.0 / 30.0
     κ = 0.0 # sqrt(30)
@@ -284,7 +285,9 @@ function test_HirutaFlow()
         set_initial_condition(lk_ω)
 	println("t = ", 0 * s.dt)
 	println(f, "# dt=", s.dt)
-        output_flowField(f, lk_ω)
+	if nt_st_out == 0
+            output_flowField(f, lk_ω)
+	end
 	lk_ω_old = lk_Func(lk_ω.vals, lk_ω.config)
 	
         for it = 1:s.nt
@@ -292,8 +295,10 @@ function test_HirutaFlow()
 	    lk_ω = lk_TimeDevelopRK4_lk(lk_ω, s, tit)
             if it % nt_output == 0
 	        println("t = ", it * s.dt)
-                output_flowField(f, lk_ω)
-
+		if it >= nt_st_out
+                    output_flowField(f, lk_ω)
+		    println("OUTPUT!")
+		end
             end
         end
     end
