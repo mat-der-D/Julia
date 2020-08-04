@@ -263,6 +263,21 @@ function test_HirutaFlow()
 
     yx_X = yx_Func(c.yx_X, c)
     yx_Y = yx_Func(c.yx_Y, c)
+    println("s.n_force = ", s.n_force)
+    yx_ncosny = s.n_force * cos(s.n_force * yx_Y)
+    yx_ncosy = s.n_force * cos(yx_Y)
+    open("test_ncosny.dat", "w") do f
+        for ix = 1:c.nx
+	    for iy = 1:c.ny
+	        println(f, yx_X.vals[iy, ix], " ",
+			   yx_Y.vals[iy, ix], " ",
+			   yx_ncosny.vals[iy, ix], " ",
+			   yx_ncosy.vals[iy, ix])
+	    end
+	    println(f)
+	end
+	println(f)
+    end
 
     open("testcase.dat", "w") do f
         lk_ω = lk_Func_undef(c)
