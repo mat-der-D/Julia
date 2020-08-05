@@ -1,0 +1,120 @@
+using FFTW
+
+
+# **************
+# *** config ***
+# **************
+struct FFT1D_config
+
+    nx::Int64			# num of grid Pts.
+    xmin::Float64		# minimum val. of x
+    xmax::Float64		# maximum val. of x
+    x_X::Array{Float64, 1}	# x-coordinate
+    k_K::Array{Float64, 1}	# k-coordinate
+
+end
+
+
+function configure_FFT1D(; nx::Int64,
+			   xmin::Float64, xmax::Float64
+			 )::FFT1D_config
+
+    # *** initialize x-coordinate ***
+    dx = (xmax - xmin) / nx
+    x_X = [xmin + n*dx for n = 0:nx-1]
+
+    # *** initialize k-coordinate ***
+    hx = 2pi / (xmax - xmin)
+    k_K = zeros(nx)
+    for n = 0 : div(nx, 2) - 1
+        k_K[n + 1] = n*hx
+	k_K[end - n] = n*hx
+    end
+
+    x_X = [xmin + 
+
+    x_X = [xl + len_x*/nx for n = 0:nx-1]
+
+    # *** initialize k-coordinate ***
+    hx = 2pi/len_x
+    k_K = zeros(nx)
+    N = div(nx, 2)
+    for n = 0 : N-1
+        k_K[n + 1] = n * hx
+    end
+    for n = N : -1 : 1
+        k_K[end - n + 1] = n * hx
+    end
+
+    return FFT1D_config(nx, xl, xr, x_X, k_X)
+
+end
+
+
+# **********************
+# *** x_Func, k_Func ***
+# **********************
+mutable struct x_Func
+
+    vals::Array{Float64, 1}
+    config::FFT2D_config
+
+end
+
+
+Base.:+(f::x_Func) = f
+Base.:+(f::x_Func, g::x_Func) = x_Func(f.vals + g.vals, f.config)
+
+
+
+
+function k_x(x_func::Vector{Float64})::Vector{Complex{Float64}}
+    return fft(complex(x_func))
+end
+
+function x_k(k_func::Vector{Complex{Float64}};
+	     dealiasing = true)::Vector{Float64}
+    if dealiasing
+        len_k = length(k_func)
+	k_func[div(len_k, 3):div(2*len_k + 2, 3)] .= 0.0
+    end
+    return real(ifft(k_func))
+end
+
+function k_DX_k(k_func::Vector{Complex{Float64}},
+		config::FFT1D_config)::Vector{Complex{Float64}}
+    return (im * config.k_X) .* k_func
+end
+
+function x_DX_x(x_func::Vector{Float64},
+		config::FFT1D_config;
+		dealiasing = true)::Vector{Float64}
+    return x_k(k_DX_k(k_x(x_func), config), dealiasing = dealiasing)
+end
+
+function test_FFT1D_derivative(;dealiasing = true)
+
+    # *** parameter setting ***
+    nx = 50	    # # of grid points
+    xl = 0.0	    # leftmost(lowest) value of x
+    xr = 2pi	    # rightmost(highest) value of x
+    c = init_FFT1D(nx, xl, xr)
+    x_X = c.x_X	    # x coordinate
+
+    # *** differentiate by spectral method ***
+    x_func = exp.(sin.(x_X))
+    k_func = k_x(x_func)
+    k_dfunc = k_DX_k(k_func, c)
+    x_dfunc = x_k(k_dfunc, dealiasing = dealiasing)
+
+    # *** exact derivative ***
+    x_exact = cos.(x_X) .* x_func
+
+    # *** output ***
+    open("testcase.txt", "w") do f
+        for i = 1:nx
+            println(f, x_X[i], " ", x_dfunc[i], " ", x_exact[i])
+        end
+    end
+
+end
