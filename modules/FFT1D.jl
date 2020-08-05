@@ -95,13 +95,8 @@ function +(f::x_Func, g::x_Func)
     end
 end
 
-+(f::x_Func, a::Float64) = x_Func(f.vals .+ a, f.config)
-+(f::x_Func, a::Int64) = f + float(a)
-+(f::x_Func, a::Bool) = f + float(a)
-
-+(a::Float64, f::x_Func) = f + a
-+(a::Int64, f::x_Func) = f + a
-+(a::Bool, f::x_Func) = f + a
++(f::x_Func, a::Real) = x_Func(f.vals .+ a, f.config)
++(a::Real, f::x_Func) = f + a
 
 # - operator
 -(f::x_Func) = x_Func(- f.vals, f.config)
@@ -114,13 +109,8 @@ function -(f::x_Func, g::x_Func)
     end
 end
 
--(f::x_Func, a::Float64) = x_Func(f.vals .- a, f.config)
--(f::x_Func, a::Int64) = f - float(a)
--(f::x_Func, a::Bool) = f - float(a)
-
--(a::Float64, f::x_Func) = x_Func(a .- f.vals, f.config)
--(a::Int64, f::x_Func) = float(a) - f
--(a::Bool, f::x_Func) = float(a) - f
+-(f::x_Func, a::Real) = x_Func(f.vals .- a, f.config)
+-(a::Real, f::x_Func) = x_Func(a .- f.vals, f.config)
 
 # * operator
 function *(f::x_Func, g::x_Func)
@@ -131,13 +121,9 @@ function *(f::x_Func, g::x_Func)
     end
 end
 
-*(f::x_Func, a::Float64) = x_Func(f.vals * a, f.config)
-*(f::x_Func, a::Int64) = f * float(a)
-*(f::x_Func, a::Bool) = f * float(a)
+*(f::x_Func, a::Real) = x_Func(f.vals * a, f.config)
+*(a::Real, f::x_Func) = f * a
 
-*(a::Float64, f::x_Func) = f * a
-*(a::Int64, f::x_Func) = f * a
-*(a::Bool, f::x_Func) = f * a
 
 # / operator
 function /(f::x_Func, g::x_Func)
@@ -148,13 +134,9 @@ function /(f::x_Func, g::x_Func)
     end
 end
 
-/(f::x_Func, a::Float64) = x_Func(f.vals / a, f.config)
-/(f::x_Func, a::Int64) = f / float(a)
-/(f::x_Func, a::Bool) = f / float(a)
+/(f::x_Func, a::Real) = x_Func(f.vals / a, f.config)
+/(a::Real, f::x_Func) = x_Func(a ./ f.vals, f.config)
 
-/(a::Float64, f::x_Func) = x_Func(a ./ f.vals, f.config)
-/(a::Int64, f::x_Func) = float(a) / f
-/(a::Bool, f::x_Func) = float(a) / f
 
 # ----- k_Func -----
 mutable struct k_Func
@@ -186,19 +168,8 @@ function +(f::k_Func, g::k_Func)
     end
 end
 
-+(f::k_Func, a::Complex{Float64}) = k_Func(f.vals .+ a, f.config)
-+(f::k_Func, a::Complex{Int64}) = f + float(a)
-+(f::k_Func, a::Complex{Bool}) = f + float(a)
-+(f::k_Func, a::Float64) = f + complex(a)
-+(f::k_Func, a::Int64) = f + complex(a)
-+(f::k_Func, a::Bool) = f + complex(a)
-
-+(a::Complex{Float64}, f::k_Func) = f + a
-+(a::Complex{Int64}, f::k_Func) = f + a
-+(a::Complex{Bool}, f::k_Func) = f + a
-+(a::Float64, f::k_Func) = f + a
-+(a::Int64, f::k_Func) = f + a
-+(a::Bool, f::k_Func) = f + a
++(f::k_Func, a::Complex) = k_Func(k.vals .+ a, f.config)
++(a::Complex, f::k_Func) = f + a
 
 # - operator
 -(f::k_Func) = k_Func(- f.vals, f.config)
@@ -211,20 +182,8 @@ function -(f::k_Func, g::k_Func)
     end
 end
 
--(f::k_Func, a::Complex{Float64}) = k_Func(f.vals .- a, f.config)
--(f::k_Func, a::Complex{Int64}) = f - float(a)
--(f::k_Func, a::Complex{Bool}) = f - float(a)
--(f::k_Func, a::Float64) = f - complex(a)
--(f::k_Func, a::Int64) = f - complex(a)
--(f::k_Func, a::Bool) = f - complex(a)
-
--(a::Complex{Float64}, f::x_Func) = k_Func(a .- f.vals, f.config)
--(a::Complex{Int64}, f::k_Func) = float(a) - f
--(a::Complex{Bool}, f::k_Func) = float(a) - f
--(a::Float64, f::x_Func) = complex(a) - f
--(a::Int64, f::k_Func) = complex(a) - f
--(a::Bool, f::k_Func) = complex(a) - f
-
+-(f::k_Func, a::Complex) = k_Func(f.vals .- a, f.config)
+-(a::Complex, f::k_Func) = k_Func(a .- f.vals, f.config)
 
 # * operator
 function *(f::k_Func, g::k_Func)
@@ -235,19 +194,8 @@ function *(f::k_Func, g::k_Func)
     end
 end
 
-*(f::k_Func, a::Complex{Float64}) = k_Func(f.vals * a, f.config)
-*(f::k_Func, a::Complex{Int64}) = f * float(a)
-*(f::k_Func, a::Complex{Bool}) = f * float(a)
-*(f::k_Func, a::Float64) = f * complex(a)
-*(f::k_Func, a::Int64) = f * complex(a)
-*(f::k_Func, a::Bool) = f * complex(a)
-
-*(a::Complex{Float64}, f::k_Func) = f * a
-*(a::Complex{Int64}, f::k_Func) = f * a
-*(a::Complex{Bool}, f::k_Func) = f * a
-*(a::Float64, f::k_Func) = f * a
-*(a::Int64, f::k_Func) = f * a
-*(a::Bool, f::k_Func) = f * a
+*(f::k_Func, a::Complex) = k_Func(f.vals * a, f.config)
+*(a::Complex, f::k_Func) = k_Func(a * f.vals, f.config)
 
 # / operator
 function /(f::k_Func, g::k_Func)
@@ -258,19 +206,8 @@ function /(f::k_Func, g::k_Func)
     end
 end
 
-/(f::k_Func, a::Complex{Float64}) = k_Func(f.vals / a, f.config)
-/(f::k_Func, a::Complex{Int64}) = f / float(a)
-/(f::k_Func, a::Complex{Bool}) = f / float(a)
-/(f::k_Func, a::Float64) = f / complex(a)
-/(f::k_Func, a::Int64) = f / complex(a)
-/(f::k_Func, a::Bool) = f / complex(a)
-
-/(a::Complex{Float64}, f::k_Func) = k_Func(a ./ f.vals, f.config)
-/(a::Complex{Int64}, f::k_Func) = float(a) / f
-/(a::Complex{Bool}, f::k_Func) = float(a) / f
-/(a::Float64, f::k_Func) = complex(a) / f
-/(a::Int64, f::k_Func) = complex(a) / f
-/(a::Bool, f::k_Func) = complex(a) / f
+/(f::k_Func, a::Complex) = k_Func(f.vals / a, f.config)
+/(a::Complex, k_Func) = k_Func(a ./ f.vals, f.config)
 
 
 # ----- FOURIER TRANSFORMATION -----
