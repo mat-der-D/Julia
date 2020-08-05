@@ -207,12 +207,12 @@ function /(f::k_Func, g::k_Func)
 end
 
 /(f::k_Func, a::Number) = k_Func(f.vals / a, f.config)
-/(a::Number, k_Func) = k_Func(a ./ f.vals, f.config)
+/(a::Number, f::k_Func) = k_Func(a ./ f.vals, f.config)
 
 
 # ----- FOURIER TRANSFORMATION -----
 function k_x(f::x_Func)::k_Func
-    return k_Func(fft(complex(f.vals)), f.config)
+    return k_Func(fft(f.vals), f.config)
 end
 
 function x_k(f::k_Func)::x_Func
