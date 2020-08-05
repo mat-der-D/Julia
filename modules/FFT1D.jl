@@ -168,8 +168,8 @@ function +(f::k_Func, g::k_Func)
     end
 end
 
-+(f::k_Func, a::Complex) = k_Func(k.vals .+ a, f.config)
-+(a::Complex, f::k_Func) = f + a
++(f::k_Func, a::Number) = k_Func(k.vals .+ a, f.config)
++(a::Number, f::k_Func) = f + a
 
 # - operator
 -(f::k_Func) = k_Func(- f.vals, f.config)
@@ -182,8 +182,8 @@ function -(f::k_Func, g::k_Func)
     end
 end
 
--(f::k_Func, a::Complex) = k_Func(f.vals .- a, f.config)
--(a::Complex, f::k_Func) = k_Func(a .- f.vals, f.config)
+-(f::k_Func, a::Number) = k_Func(f.vals .- a, f.config)
+-(a::Number, f::k_Func) = k_Func(a .- f.vals, f.config)
 
 # * operator
 function *(f::k_Func, g::k_Func)
@@ -194,8 +194,8 @@ function *(f::k_Func, g::k_Func)
     end
 end
 
-*(f::k_Func, a::Complex) = k_Func(f.vals * a, f.config)
-*(a::Complex, f::k_Func) = k_Func(a * f.vals, f.config)
+*(f::k_Func, a::Number) = k_Func(f.vals * a, f.config)
+*(a::Number, f::k_Func) = k_Func(a * f.vals, f.config)
 
 # / operator
 function /(f::k_Func, g::k_Func)
@@ -206,8 +206,8 @@ function /(f::k_Func, g::k_Func)
     end
 end
 
-/(f::k_Func, a::Complex) = k_Func(f.vals / a, f.config)
-/(a::Complex, k_Func) = k_Func(a ./ f.vals, f.config)
+/(f::k_Func, a::Number) = k_Func(f.vals / a, f.config)
+/(a::Number, k_Func) = k_Func(a ./ f.vals, f.config)
 
 
 # ----- FOURIER TRANSFORMATION -----
