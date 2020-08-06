@@ -1,3 +1,4 @@
+import Base.size, Base.getindex, Base.setindex!
 import Base.==, Base.copy
 import Base.+, Base.-, Base.*, Base./
 import Base.sin, Base.cos, Base.tan, Base.cot, Base.sec, Base.csc
@@ -57,12 +58,12 @@ function configure_FFT2D(; nx::Int64, ny::Int64,
     # *** initialize x-coordinate ***
     dx = (xmax - xmin) / nx
     yx_X = zeros(ny, nx)
-    yx_X .= [xmin + n*dx for n = 0:nx-1]
+    yx_X .= [xmin + n*dx for n = 0:nx-1]'
 
     # *** initialize x-coordinate ***
     dy = (ymax - ymin) / ny
     yx_Y = zeros(ny, nx)
-    yx_Y .= [ymin + n*dy for n = 0:ny-1]'
+    yx_Y .= [ymin + n*dy for n = 0:ny-1]
 
     # *** initialize k-coordinate ***
     hx = 2pi/(xmax - xmin)
@@ -98,12 +99,18 @@ end
 # *** yx_Func, lk_Func ***
 # ************************
 # ----- yx_Func -----
-mutable struct yx_Func
+mutable struct yx_Func <: AbstractArray{Float64, 2}
 
     vals::Array{Float64, 2}
     config::FFT2D_config
 
 end
+
+size(f::yx_Func) = size(f.vals)
+getindex(f::yx_Func, i::Int) = getindex(f.vals, i)
+getindex(f::yx_Func, I...) = getindex(f.vals, I...)
+setindex!(f::yx_Func, v, i::Int) = setindex!(f.vals, v, i)
+setindex!(f::yx_Func, v, I...) = setindex!(f.vals, v, I...)
 
 
 function yx_Func_undef(c::FFT2D_config)
@@ -176,16 +183,21 @@ end
 
 
 # ----- lk_Func -----
-mutable struct lk_Func
+mutable struct lk_Func <: AbstractArray{Complex{Float64}, 2}
 
     vals::Array{Complex{Float64}, 2}
     config::FFT2D_config
 
 end
 
+size(f::lk_Func) = size(f.vals)
+getindex(f::lk_Func, i::Int) = getindex(f.vals, i)
+getindex(f::lk_Func, I...) = getindex(f.vals, I...)
+setindex!(f::lk_Func, v, i::Int) = setindex!(f.vals, v, i)
+setindex!(f::lk_Func, v, I...) = setindex!(f.vals, v, I...)
 
 function lk_Func_undef(c::FFT2D_config)
-    return lk_Func(Array{Complex{Float64}, 1}(undef, c.nx), c)
+    return lk_Func(Array{Complex{Float64}, 2}(undef, c.ny, c.nx), c)
 end
 
 

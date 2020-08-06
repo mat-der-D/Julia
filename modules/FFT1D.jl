@@ -1,3 +1,4 @@
+import Base.size, Base.getindex, Base.setindex!
 import Base.==, Base.copy
 import Base.+, Base.-, Base.*, Base./
 import Base.sin, Base.cos, Base.tan, Base.cot, Base.sec, Base.csc
@@ -68,13 +69,16 @@ end
 # *** x_Func, k_Func ***
 # **********************
 # ----- x_Func -----
-mutable struct x_Func
+mutable struct x_Func <: AbstractArray{Float64, 1}
 
     vals::Array{Float64, 1}
     config::FFT1D_config
 
 end
 
+size(f::x_Func) = size(f.vals)
+getindex(f::x_Func, i::Int) = getindex(f.vals, i)
+setindex!(f::x_Func, v, i::Int) = setindex!(f.vals, v, i)
 
 function x_Func_undef(c::FFT1D_config)
     return x_Func(Array{Float64, 1}(undef, c.nx), c)
@@ -146,12 +150,16 @@ end
 
 
 # ----- k_Func -----
-mutable struct k_Func
+mutable struct k_Func <: AbstractArray{Complex{Float64}, 1}
 
     vals::Array{Complex{Float64}, 1}
     config::FFT1D_config
 
 end
+
+size(f::k_Func) = size(f.vals)
+getindex(f::k_Func, i::Int) = getindex(f.vals, i)
+setindex!(f::k_Func, v, i::Int) = setindex!(f.vals, v, i)
 
 
 function k_Func_undef(c::FFT1D_config)
