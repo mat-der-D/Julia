@@ -14,11 +14,11 @@ using FFTW
 # **************
 struct FFT1D_config
 
-    nx::Int64			# num of grid Pts.
-    xmin::Float64		# minimum val. of x
-    xmax::Float64		# maximum val. of x
+    nx::Int64	# num of grid Pts.
+    xmin::Float64     # minimum val. of x
+    xmax::Float64     # maximum val. of x
     x_X::Array{Float64, 1}	# x-coordinate
-    k_K::Array{Float64, 1}	# k-coordinate
+    k_K::Array{Complex{Float64}, 1}	# k-coordinate
     dealiasing::Bool
 
 end
@@ -33,7 +33,9 @@ end
 
 
 function copy(c::FFT1D_config)
-    return FFT1D_config(c.nx, c.xmin, c.xmax, c.x_X, c.k_K)
+    return FFT1D_config(c.nx, c.xmin, c.xmax,
+    	   		c.x_X, c.k_K,
+			c.dealiasing)
 end
 
 
@@ -48,12 +50,12 @@ function configure_FFT1D(; nx::Int64,
 
     # *** initialize k-coordinate ***
     hx = 2pi/(xmax - xmin)
-    k_K = zeros(nx)
-    N = div(nx, 2)
-    for n = 0 : N-1
-        k_K[n + 1] = n * hx
+    k_K = complex(zeros(nx))
+    Nx = div(nx-1, 2)
+    for n = 1 : Nx
+    	k_K[begin + n] = n * hx
     end
-    for n = N : -1 : 1
+    for n = Nx : -1 : 1
         k_K[end - n + 1] = - n * hx
     end
 
@@ -71,6 +73,11 @@ mutable struct x_Func
     vals::Array{Float64, 1}
     config::FFT1D_config
 
+end
+
+
+function x_Func_undef(c::FFT1D_config)
+    return x_Func(Array{Float64, 1}(undef, c.nx), c)
 end
 
 
@@ -144,6 +151,11 @@ mutable struct k_Func
     vals::Array{Complex{Float64}, 1}
     config::FFT1D_config
 
+end
+
+
+function k_Func_undef(c::FFT1D_config)
+    return k_Func(Array{Complex{Float64}, 1}(undef, c.nx), c)
 end
 
 
