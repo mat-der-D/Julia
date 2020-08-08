@@ -1,12 +1,9 @@
-struct simple
+function f(a, dt)
 
-  x::Float64
-  s::String
+    y = 1.0
+    for n = 100:-1:2
+        y = 1. - dt/n * a * y
+    end
+    return y * dt
 
 end
-
-Base.:+(f::simple, g::simple) = simple(f.x + g.x, f.s*g.s)
-Base.:sin(f::simple) = simple(sin(f.x), "sin"*f.s)
-
-a = simple(1., "one")
-print(sin(a))
