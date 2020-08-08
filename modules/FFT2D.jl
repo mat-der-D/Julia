@@ -42,10 +42,12 @@ end
 
 
 function copy(c::FFT2D_config)
+
     return FFT2D_config(c.nx, c.ny,
     	   		c.xmin, c.xmax, c.ymin, c.ymax,
-			c.yx_X, c.yx_Y, c.lk_K, c.lk_K,
-			c.config)
+			copy(c.yx_X), copy(c.yx_Y),
+			copy(c.lk_K), copy(c.lk_K),
+			c.dealiasing)
 end
 
 
@@ -70,10 +72,10 @@ function configure_FFT2D(; nx::Int64, ny::Int64,
     lk_K = complex(zeros(ny, nx))
     Nx = div(nx-1, 2)
     for n = 1 : Nx
-    	lk_K[begin + n, :] .= n * hx
+    	lk_K[:, begin + n] .= n * hx
     end
     for n = Nx : -1 : 1
-        lk_K[end - n + 1, :] .= - n * hx
+        lk_K[:, end - n + 1] .= - n * hx
     end
 
     # *** initialize l-coordinate ***
@@ -81,10 +83,10 @@ function configure_FFT2D(; nx::Int64, ny::Int64,
     lk_L = complex(zeros(ny, nx))
     Ny = div(ny-1, 2)
     for n = 1 : Ny
-    	lk_L[:, begin + n] .= n * hx
+    	lk_L[begin + n, :] .= n * hy
     end
     for n = Ny : -1 : 1
-        lk_L[:, end - n + 1] .= - n * hx
+        lk_L[end - n + 1, :] .= - n * hy
     end
 
     return FFT2D_config(nx, ny,
@@ -104,6 +106,11 @@ mutable struct yx_Func <: AbstractArray{Float64, 2}
     vals::Array{Float64, 2}
     config::FFT2D_config
 
+    function yx_Func(mat::Array{Float64, 2}, c::FFT2D_config)
+        mat_cp = copy(mat)
+	return new(mat_cp, c)
+    end
+    
 end
 
 size(f::yx_Func) = size(f.vals)
@@ -129,7 +136,7 @@ end
 
 # ----- OPERATORS -----
 # + operator
-+(f::yx_Func) = f
++(f::yx_Func) = yx_Func(f.vals, f.config)
 
 function +(f::yx_Func, g::yx_Func)
     if f.config != g.config
@@ -159,7 +166,7 @@ end
 # * operator
 function *(f::yx_Func, g::yx_Func)
     if f.config != g.config
-        error("FFT2D_config of two_Func are not equal.")
+        error("FFT2D_config of two yx_Func are not equal.")
     else
         return yx_Func(f.vals .* g.vals, f.config)
     end
@@ -188,6 +195,12 @@ mutable struct lk_Func <: AbstractArray{Complex{Float64}, 2}
     vals::Array{Complex{Float64}, 2}
     config::FFT2D_config
 
+    function lk_Func(mat::Array{Complex{Float64}, 2},
+    	     	     c::FFT2D_config)
+        mat_cp = copy(mat)
+	return new(mat_cp, c)
+    end
+
 end
 
 size(f::lk_Func) = size(f.vals)
@@ -212,7 +225,7 @@ end
 
 # ----- OPERATORS -----
 # + operator
-+(f::lk_Func) = f
++(f::lk_Func) = lk_Func(f.vals, f.config)
 
 function +(f::lk_Func, g::lk_Func)
     if f.config != g.config
@@ -222,7 +235,7 @@ function +(f::lk_Func, g::lk_Func)
     end
 end
 
-+(f::lk_Func, a::Number) = lk_Func(k.vals .+ a, f.config)
++(f::lk_Func, a::Number) = lk_Func(f.vals .+ a, f.config)
 +(a::Number, f::lk_Func) = f + a
 
 # - operator
@@ -273,8 +286,10 @@ function yx_lk(f::lk_Func)::yx_Func
 
     if f.config.dealiasing
         f = copy(f)
-	L = f.config.nx
-	f.vals[div(L, 3) : div(2*L + 2, 3)] .= 0.0
+	Lx = f.config.nx
+	Ly = f.config.ny
+	f.vals[:, div(Lx, 3) : div(2*Lx + 2, 3)] .= 0.0
+	f.vals[div(Ly, 3) : div(2*Ly + 2, 3), :] .= 0.0
     end
     return yx_Func(real(ifft(f.vals)), f.config)
 end
