@@ -68,25 +68,12 @@ function set_TimeIntegrationTools(
     yx_Y = yx_Func(c.yx_Y, c)
     yx_ncosny = s.n_force * cos(s.n_force * yx_Y)
     lk_ncosny = lk_yx(yx_ncosny)
-    lk_addFactor = lk_ncosny * dt * (
-        1.0 - dt/2.0 * lk_alp * (
-	    1.0 - dt/3.0 * lk_alp * (
-	        1.0 - dt/4.0 * lk_alp * (
-		    1.0 - dt/5.0 * lk_alp * (
-		        1.0 - dt/6.0 * lk_alp * (
-			    1.0 - dt/7.0 * lk_alp * (
-			        1.0 - dt/8.0 * lk_alp * (
-				    1.0 - dt/9.0 * lk_alp * (
-				        1.0 - dt/10.0 * lk_alp
-				    )
-				)
-			    )
-			)
-		    )
-		)
-	    )
-	)
-    )
+    lk_addFactor = lk_Func(complex(ones(c.ny, c.nx)), c)
+    for n = 100 : -1 : 2
+    	lk_addFactor = 1.0 - dt/n * lk_alp * lk_addFactor
+    end
+    lk_addFactor *= dt * lk_ncosny
+    # addFactor = ncosny * (1 - exp(- alp*dt))/alp
 
     return TimeIntegrationTools(lk_addFactor, lk_expFactor)
 
@@ -250,13 +237,13 @@ function main_HirutaFlow()
 
     # *** PARAMETER CASE 1 ***
     # -- Time --
-    nt = 5000		# # of time steps
+    nt = 6000		# # of time steps
     t_st = 0.	    	# start time
-    t_ed = 10.      	# end time
+    t_ed = 300.      	# end time
     # -- Physical Params --
     Re_inv = 1.0 / 30.0
-    κ = 0.0 # sqrt(30)
-    U_y = 0.6
+    κ = 0.0
+    U_y = 0.0
     n_force = 4
 
     s1 = set_HirutaFlow(nt=nt,
@@ -269,13 +256,13 @@ function main_HirutaFlow()
 
     # *** PARAMETER CASE 2 ***
     # -- Time --
-    nt = 5000		# # of time steps
-    t_st = 10.		# start time
-    t_ed = 20.      	# end time
+    nt = 4000		# # of time steps
+    t_st = 300.		# start time
+    t_ed = 500.      	# end time
     # -- Physical Params --
-    Re_inv = 1.0 / 12.0
+    Re_inv = 1.0 / 60.0
     κ = κ
-    U_y = U_y
+    U_y = 1.1
     n_force = n_force
 
     s2 = set_HirutaFlow(nt=nt,
@@ -287,8 +274,8 @@ function main_HirutaFlow()
 
 
     # *** output settings ***
-    nt_alert  = 50	# println every nt_alert
-    nt_output = 50 	# output every nt_output
+    nt_alert  = 20	# println every nt_alert
+    nt_output = 20 	# output every nt_output
     nt_st_out = 0	# start ouput at it = nt_st_out
 
 

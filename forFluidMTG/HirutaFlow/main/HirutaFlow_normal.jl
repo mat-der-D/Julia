@@ -68,25 +68,13 @@ function set_TimeIntegrationTools(
     yx_Y = yx_Func(c.yx_Y, c)
     yx_ncosny = s.n_force * cos(s.n_force * yx_Y)
     lk_ncosny = lk_yx(yx_ncosny)
-    lk_addFactor = lk_ncosny * dt * (
-        1.0 - dt/2.0 * lk_alp * (
-	    1.0 - dt/3.0 * lk_alp * (
-	        1.0 - dt/4.0 * lk_alp * (
-		    1.0 - dt/5.0 * lk_alp * (
-		        1.0 - dt/6.0 * lk_alp * (
-			    1.0 - dt/7.0 * lk_alp * (
-			        1.0 - dt/8.0 * lk_alp * (
-				    1.0 - dt/9.0 * lk_alp * (
-				        1.0 - dt/10.0 * lk_alp
-				    )
-				)
-			    )
-			)
-		    )
-		)
-	    )
-	)
-    )
+
+    lk_addFactor = lk_Func(complex(ones(c.ny, c.nx)), c)
+    for n = 100 : -1 : 2
+    	lk_addFactor = 1.0 - dt/n * lk_alp * lk_addFactor
+    end
+    lk_addFactor *= dt * lk_ncosny
+    # addFactor = ncosny * (1 - exp(- alp*dt))/alp
 
     return TimeIntegrationTools(lk_addFactor, lk_expFactor)
 
@@ -176,32 +164,32 @@ function lk_stream_vorticity_lk(lk_ω::lk_Func)::lk_Func
     lk_KKLL[1, 1] = 1.
     lk_ψ[1, 1] = 0.
 
-    # if c.nx % 2 == 0 && c.ny % 2 == 0
+    if c.nx % 2 == 0 && c.ny % 2 == 0
     
-    #     half_nx = div(c.nx, 2)
-    # 	half_ny = div(c.ny, 2)
+        half_nx = div(c.nx, 2)
+    	half_ny = div(c.ny, 2)
 	
-    #     lk_KKLL[1, 1 + half_nx] = 1.
-    # 	lk_KKLL[1 + half_ny, 1] = 1.
-    # 	lk_KKLL[1 + half_ny, 1 + half_nx] = 1.
+        lk_KKLL[1, 1 + half_nx] = 1.
+    	lk_KKLL[1 + half_ny, 1] = 1.
+    	lk_KKLL[1 + half_ny, 1 + half_nx] = 1.
 	
-    # 	lk_ψ[1, 1 + half_nx] = 0.
-    # 	lk_ψ[1 + half_ny, 1] = 0.
-    # 	lk_ψ[1 + half_ny, 1 + half_nx] = 0.
+    	lk_ψ[1, 1 + half_nx] = 0.
+    	lk_ψ[1 + half_ny, 1] = 0.
+    	lk_ψ[1 + half_ny, 1 + half_nx] = 0.
 	
-    # elseif c.nx % 2 == 0 # but not c.ny % 2 == 0
+    elseif c.nx % 2 == 0 # but not c.ny % 2 == 0
 
-    #     half_nx = div(c.nx, 2)
-    # 	lk_KKLL[1, 1 + half_nx] = 1.
-    # 	lk_ψ[1, 1 + half_nx] = 0.
+        half_nx = div(c.nx, 2)
+    	lk_KKLL[1, 1 + half_nx] = 1.
+    	lk_ψ[1, 1 + half_nx] = 0.
 
-    # elseif c.ny % 2 == 0 # but not c.nx % 2 == 0
+    elseif c.ny % 2 == 0 # but not c.nx % 2 == 0
 
-    #     half_ny = div(c.ny, 2)
-    # 	lk_KKLL[1 + half_ny, 1] = 1.
-    # 	lk_ψ[1 + half_ny, 1] = 0.
+        half_ny = div(c.ny, 2)
+    	lk_KKLL[1 + half_ny, 1] = 1.
+    	lk_ψ[1 + half_ny, 1] = 0.
 
-    # end
+    end
 
     return lk_ψ / lk_KKLL
 
@@ -250,9 +238,9 @@ function main_HirutaFlow()
 
     # *** PARAMETER ***
     # -- Time --
-    nt = 6000		# # of time steps
+    nt = 10000		# # of time steps
     t_st = 0.	    	# start time
-    t_ed = 300.      	# end time
+    t_ed = 500.      	# end time
     # -- Physical Params --
     Re_inv = 1.0 / 30.0
     κ = 0.0 # sqrt(30)
@@ -268,7 +256,7 @@ function main_HirutaFlow()
 
     # *** output settings ***
     nt_alert  = 20	# println every nt_alert
-    nt_output = 60 	# output every nt_output
+    nt_output = 20 	# output every nt_output
     nt_st_out = 0	# start ouput at it = nt_st_out
 
 
