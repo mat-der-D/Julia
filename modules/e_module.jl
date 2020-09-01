@@ -14,10 +14,10 @@ struct ConfigFFT{N}
 end
 
 
-function configure_FFT{N}(; ngrids::Array{Int, 1},
-	 		    nwaves::Array{Int, 1},
-			    xmins::Array{Float64, 1},
-			    xmaxs::Array{Float64, 1}
+function configure_FFT(; ngrids::Array{Int, 1},
+	 		 nwaves::Array{Int, 1},
+			 xmins::Array{Float64, 1},
+			 xmaxs::Array{Float64, 1}
 			)::ConfigFFT{N} where N
 
     to_tup(x...) = x
