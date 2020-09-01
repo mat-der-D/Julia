@@ -237,9 +237,9 @@ function main_HirutaFlow()
 
     # *** PARAMETER CASE 1 ***
     # -- Time --
-    nt = 6000		# # of time steps
-    t_st = 0.	    	# start time
-    t_ed = 300.      	# end time
+    nt = 4000		# # of time steps
+    t_st = -200.    	# start time
+    t_ed = 0.      	# end time
     # -- Physical Params --
     Re_inv = 1.0 / 30.0
     κ = 0.0
@@ -256,13 +256,13 @@ function main_HirutaFlow()
 
     # *** PARAMETER CASE 2 ***
     # -- Time --
-    nt = 4000		# # of time steps
-    t_st = 300.		# start time
-    t_ed = 500.      	# end time
+    nt = 50000		# # of time steps
+    t_st = 0.		# start time
+    t_ed = 2500.      	# end time
     # -- Physical Params --
-    Re_inv = 1.0 / 60.0
+    Re_inv = 1.0 / 50.
     κ = κ
-    U_y = 1.1
+    U_y = 1.46
     n_force = n_force
 
     s2 = set_HirutaFlow(nt=nt,
@@ -275,7 +275,7 @@ function main_HirutaFlow()
 
     # *** output settings ***
     nt_alert  = 20	# println every nt_alert
-    nt_output = 20 	# output every nt_output
+    nt_output = 200 	# output every nt_output
     nt_st_out = 0	# start ouput at it = nt_st_out
 
 

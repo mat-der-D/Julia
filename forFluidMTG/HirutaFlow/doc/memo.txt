@@ -1,0 +1,19 @@
+Re = 26.75 (near criticality), 50 (switch direction)
+
+(Re, U_y)=(26.75, 0.933), (50, 1.46)
+
+(n, alpha)=(4, 0.25)
+
+
+Not JSPS paper : JSPS paper with κ=0
+temporal: 2*10^(-3)
+  ... 自分のコードは時間精度上げてるので
+      もうちょいゆるくておｋ
+spacial: 128 pts per 2pi
+
+
+
+作戦:
+quench のコードで適当に初期値を育ててから
+Not JSPS paper のパラメータで長期計算(どれぐらい？)
+  ... 0<= t <= 2500 ぐらい？(t=10 ずつとか)
