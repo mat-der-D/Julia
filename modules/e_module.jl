@@ -1,5 +1,76 @@
 using FFTW
 
+# *******************************************
+#  Configuration
+# *******************************************
+struct ConfigFFT{N}
+
+    ngrids::Tuple{Vararg{Int, N}} # Number Of Grids
+    nwaves::Tuple{Vararg{Int, N}} # Cutoff wavenumber,
+    		                  # nwaves[_] <= ngrids[_]
+    xmins::Tuple{Vararg{Float64, N}} # Min values of space
+    xmaxs::Tuple{Vararg{Float64, N}} # Max values of space
+    
+end
+
+
+function configure_FFT{N}(; ngrids::Array{Int, 1},
+	 		    nwaves::Array{Int, 1},
+			    xmins::Array{Float64, 1},
+			    xmaxs::Array{Float64, 1}
+			)::ConfigFFT{N} where N
+
+    to_tup(x...) = x
+    ngrids_tup = to_tup(ngrids...)
+    nwaves_tup = to_tup(nwaves...)
+    xmins_tup = to_tup(xmins...)
+    xmaxs_tup = to_tup(xmaxs...)
+    return ConfigFFT{N}(ngrids_tup, nwaves_tup,
+                        xmins_tup, xmaxs_tup)
+
+end
+
+
+# *******************************************
+#  x_Func, e_Func
+# *******************************************
+# +++++ x_Func +++++
+mutable struct x_Func <: AbstractArray{Float64, N}
+
+    vals::Array{Float64, N}
+    config::ConfigFFT{N}
+    
+    # constructor
+    function x_Func(vals::Array{Float64, N},
+    	     	    config::ConfigFFT{N}) where N
+        if size(vals) == config.ngrids
+	    return new(copy(vals), config)
+	else
+	    println("ERROR")
+	end
+    end
+
+    function x_Func(vals::Array{Real, N},
+                    config::ConfigFFT{N}) where N
+        return x_Func(float(vals), config)
+    end
+
+end
+
+
+Base.:size(f::x_Func) = size(f.vals)
+Base.:getindex(f::x_Func, i...) = getindex(f.vals, i...)
+Base.:setindex!(f::x_Func, v, i...) = setindex!(f.vals, v, i...)
+
+Base.:copy(f::x_Func) = x_Func(f.vals, f.config)
+
+# --- operators ---
+
+# To Be Implemented!
+
+
+
+
 
 # *******************************************
 #  Configuration
