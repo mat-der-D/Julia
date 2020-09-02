@@ -1,3 +1,5 @@
+# fft version
+
 using FFTW
 
 # *******************************************
@@ -7,19 +9,32 @@ struct ConfigFFT{N}
 
     ngrids::Tuple{Vararg{Int, N}} # Number Of Grids
     nwaves::Tuple{Vararg{Int, N}} # Cutoff wavenumber,
-    		                  # nwaves[_] <= ngrids[_]
+    		                  # ngrids[_} >= nwaves[_]
     xmins::Tuple{Vararg{Float64, N}} # Min values of space
     xmaxs::Tuple{Vararg{Float64, N}} # Max values of space
-    
+
+    # constructor
+    function ConfigFFT{N}(ngrids::Tuple{Vararg{Int, N}},
+                          nwaves::Tuple{Vararg{Int, N}},
+			  xmins::Tuple{Vararg{Float64, N}},
+			  xmaxs::Tuple{Vararg{Float64, N}}
+			  ) where N
+        if all(ngrids .>= nwaves)
+	    return new(ngrids, nwaves, xmins, xmaxs)
+	else
+	    println("ERROR")
+	end
+    end
+
 end
 
 
 function configure_FFT(; ngrids::Array{Int, 1},
 	 		 nwaves::Array{Int, 1},
 			 xmins::Array{Float64, 1},
-			 xmaxs::Array{Float64, 1}
-			)::ConfigFFT{N} where N
+			 xmaxs::Array{Float64, 1})
 
+    N = length(ngrids)
     to_tup(x...) = x
     ngrids_tup = to_tup(ngrids...)
     nwaves_tup = to_tup(nwaves...)
@@ -32,133 +47,183 @@ end
 
 
 # *******************************************
-#  x_Func, e_Func
+#  XFunc, KFunc
 # *******************************************
-# +++++ x_Func +++++
-mutable struct x_Func <: AbstractArray{Float64, N}
+# +++++ XFunc +++++++++++++++++++++++++
+mutable struct XFunc{N} <: AbstractArray{Float64, N}
 
     vals::Array{Float64, N}
     config::ConfigFFT{N}
-    
+
     # constructor
-    function x_Func(vals::Array{Float64, N},
-    	     	    config::ConfigFFT{N}) where N
+    function XFunc{N}(vals::Array{Float64, N},
+                       config::ConfigFFT{N}) where N
         if size(vals) == config.ngrids
-	    return new(copy(vals), config)
-	else
-	    println("ERROR")
-	end
+            return new(copy(vals), config)
+        else
+            println("ERROR")
+        end
     end
 
-    function x_Func(vals::Array{Real, N},
-                    config::ConfigFFT{N}) where N
-        return x_Func(float(vals), config)
+    function XFunc(vals::Array{T, N},
+    	           config::ConfigFFT{N}
+		   ) where N where T <: Real
+        return XFunc{N}(float(vals), config)
+    end
+
+    function XFunc(undef::UndefInitializer,
+		   config::ConfigFFT{N}) where N
+	f_undef = Array{Float64, N}(undef, config.ngrids)
+        return XFunc{N}(f_undef, config)
     end
 
 end
 
 
-Base.:size(f::x_Func) = size(f.vals)
-Base.:getindex(f::x_Func, i...) = getindex(f.vals, i...)
-Base.:setindex!(f::x_Func, v, i...) = setindex!(f.vals, v, i...)
-
-Base.:copy(f::x_Func) = x_Func(f.vals, f.config)
+Base.:size(f::XFunc) = size(f.vals)
+Base.:getindex(f::XFunc, i...) = getindex(f.vals, i...)
+Base.:setindex!(f::XFunc, v, i...) = setindex!(f.vals, v, i...)
+Base.:copy(f::XFunc{N}) where N = XFunc{N}(f.vals, f.config)
 
 # --- operators ---
 
 # To Be Implemented!
 
 
+# +++++ KFunc +++++++++++++++++++++++++
+mutable struct KFunc{N} <: AbstractArray{Complex{Float64}, N}
 
+    vals::Array{Complex{Float64}, N}
+    config::ConfigFFT{N}
 
-
-# *******************************************
-#  Configuration
-# *******************************************
-struct ConfigFFT1D
-
-    nx::Int        # Number of Grids
-    nk::Int        # Cut-off wavenumber, nk <= nx
-    xmin::Float64  # Min value of x
-    xmax::Float64  # Max value of x
-    x_X::Array{Float64, 1} # x-corrdinate
-
-end
-
-
-function configure_FFT1D(; nx::Int, nk::Int,
-	 		   xmin::Float64, xmax::Float64
-			)::ConfigFFT1D
-			
-    dx = (xmax - xmin) / nx
-    x_X = [xmin + ix*dx for ix = 1:nx-1]
-    return ConfigFFT1D(nx, nk, xmin, xmax, x_X)
-
-end
-
-
-# *******************************************
-#  x_Func, e_Func
-# *******************************************
-# +++++ x_Func +++++
-mutable struct x_Func <: AbstractArray{Float64, 1}
-
-    vals::Array{Float64, 1}
-    config::ConfigFFT1D
-    
     # constructor
-    function x_Func(vals::Array{Float64, 1}, config::ConfigFFT1D)
-        if size(vals) == (config.nx,)
-	    return new(copy(vals), config)
-	else
-	    println("ERROR")
-	end
+    function KFunc{N}(vals::Array{Complex{Float64}, N},
+                      config::ConfigFFT{N}) where N
+        if size(vals) == config.nwaves
+            return new(copy(vals), config)
+        else
+            println("ERROR")
+        end
     end
 
-    function x_Func(vals::Array{Int, 1}, config::ConfigFFT1D)
-        return x_Func(float(vals), config)
+    function KFunc(vals::Array{T, N},
+    	           config::ConfigFFT{N}) where N where T <: Number
+        return KFunc{N}(complex(float(vals)), config)
+    end
+
+    function KFunc(undef::UndefInitializer,
+                   config::ConfigFFT{N}) where N
+        f_undef = Array{Complex{Float64}, N}(undef, config.nwaves)
+	return KFunc{N}(f_undef, config)
     end
 
 end
 
 
-Base.:size(f::x_Func) = size(f.vals)
-Base.:getindex(f::x_Func, i::Int) = getindex(f.vals, i)
-Base.:setindex!(f::x_Func, v, i::Int) = setindex!(f.vals, v, i)
-
-Base.:copy(f::x_Func) = x_Func(f.vals, f.config)
+Base.:size(f::KFunc) = size(f.vals)
+Base.:getindex(f::KFunc, i...) = getindex(f.vals, i...)
+Base.:setindex!(f::KFunc, v, i...) = setindex!(f.vals, v, i...)
+Base.:copy(f::KFunc) = KFunc(copy(f.vals), f.config)
 
 # --- operators ---
 
 # To Be Implemented!
 
+# *******************************************
+#  Basic Tools
+# *******************************************
+# +++++ Coordinate in X-space ++++++++++
+function Xcoord(index::Int, config::ConfigFFT{N}) where N
+    ngrid = config.ngrids[index]
+    xmin = config.xmins[index]
+    xmax = config.xmaxs[index]
+    dx = (xmax - xmin) / ngrid
+    xvalue(inds) = xmin + (inds[index] - 1)*dx
 
+    UNDEF = Array{Any, N}(undef, config.ngrids)
+    coord = xvalue.( CartesianIndices(UNDEF) )
+    return XFunc(coord, config)
+end
 
-# +++++ k_Func +++++
-mutable struct k_Func <: AbstractArray{Float64, 1}
+function x_Xgen(config::ConfigFFT{1})
+    return Xcoord(1, config)
+end
 
-    vals::Array{Complex{Float64}, 1}
-    config::ConfigFFT1D
+function xy_Xgen(config::ConfigFFT{2})
+    return Xcoord(1, config)
+end
+
+function xy_Ygen(config::ConfigFFT{2})
+    return Xcoord(2, config)
+end
+
+function xyz_Xgen(config::ConfigFFT{3})
+    return Xcoord(1, config)
+end
+
+function xyz_Ygen(config::ConfigFFT{3})
+    return Xcoord(2, config)
+end
+
+function xyz_Zgen(config::ConfigFFT{3})
+    return Xcoord(3, config)
+end
+
+# +++++ Coordinate in K-space ++++++++++
+function Kcoord(index::Int, config::ConfigFFT{N}) where N
+    ngrid = config.ngrids[index]
+    half_ngrid = div(ngrid, 2)
     
-    # constructor
-    function k_Func(vals::Array{Complex{Float64}, 1},
-    	     	    config::ConfigFFT1D)
-        if size(vals) == (div(config.nx, 2) + 1,)
-	    return new(copy(vals), config)
+    function kvalue(inds)
+        ind = inds[index]
+	if ind <= half_ngrid
+	    return ind - 1
 	else
-	    println("ERROR")
+	    return ind - ngrids - 1
 	end
     end
 
-    function k_Func(vals::Array{Real, 1}, config::ConfigFFT1D)
-        return x_Func(float(complex(vals)), config)
-    end
+    UNDEF = Array{Any, N}(undef, config.ngrids)
+    coord = kvalue.( CartesianIndices(UNDEF) )
+    return KFunc(coord, config)
+end
 
+function k_Kgen(config::ConfigFFT{1})
+    return Kcorrd(1, config)
+end
+
+function kl_Kgen(config::ConfigFFT{2})
+    return Kcorrd(1, config)
+end
+
+function kl_Lgen(config::ConfigFFT{2})
+    return Kcorrd(2, config)
+end
+
+function klm_Kgen(config::ConfigFFT{3})
+    return Kcorrd(1, config)
+end
+
+function klm_Lgen(config::ConfigFFT{3})
+    return Kcorrd(2, config)
+end
+
+function klm_Mgen(config::ConfigFFT{3})
+    return Kcorrd(3, config)
 end
 
 
-Base.:size(f::k_Func) = size(f.vals)
-Base.:getindex(f::k_Func, i::Int) = getindex(f.vals, i)
-Base.:setindex!(f::k_Func, v, i::Int) = setindex!(f.vals, v, i)
+# *******************************************
+#  Fourier Transformation
+# *******************************************
+K_X(f::XFunc) = KFunc(fft(f.vals), f.config)
+X_K(f::KFunc) = XFunc(ifft(f.vals), f.config)
 
-Base.:copy(f::k_Func) = k_Func(f.vals, f.config)
+k_x(f::XFunc{1}) = K_X(f)
+x_k(f::KFunc{1}) = X_K(f)
+
+kl_xy(f::XFunc{2}) = K_X(f)
+xy_kl(f::KFunc{2}) = X_K(f)
+
+klm_xyz(f::XFunc{3}) = K_X(f)
+xyz_klm(f::KFunc{3}) = X_K(f)
