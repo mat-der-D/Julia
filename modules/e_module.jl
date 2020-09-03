@@ -6,29 +6,19 @@ using FFTW
 # *******************************************
 struct ConfigFFT{N}
 
-    ngrids::Tuple{Vararg{Int, N}} # Number Of Grids
-    nwaves::Tuple{Vararg{Int, N}} # Cutoff wavenumber,
+    ngrids::NTuple{N, Int}        # Number Of Grids
+    nwaves::NTuple{N, Int}   	  # Cutoff wavenumber,
     		                  # ngrids[_] >= nwaves[_]
-    xranges::Tuple{Vararg{Tuple{Float64, Float64}, N}}
+    xranges::NTuple{N, NTuple{2, Float64}}
     				  # tuple of (min, max) s
-    Xcoords::Tuple{Vararg{Array{Float64, N}, N}}
+    Xcoords::NTuple{N, Array{Float64, N}}
     				  # X-coordinates
-    Kcoords::Tuple{Vararg{Array{Complex{Float64}, N}, N}}
+    Kcoords::NTuple{N, Array{Complex{Float64}, N}}
     				  # K-coordinates
 
     # CONSTRUCTOR
     function ConfigFFT{N}(
-        ngrids::Tuple{Vararg{Int, N}},
-        nwaves::Tuple{Vararg{Int, N}},
-	xranges::Tuple{
-	             Vararg{Tuple{Float64, Float64}, N}
-		 },
-	Xcoords::Tuple{
-		     Vararg{Array{Float64, N}, N}
-		 },
-	Kcoords::Tuple{
-		     Vararg{Array{Complex{Float64}, N}, N}
-		 }) where N
+        ngrids, nwaves, xranges, Xcoords, Kcoords) where N
 		 
         if all(ngrids .>= nwaves)
 	    return new(ngrids, nwaves, xranges, Xcoords, Kcoords)
@@ -38,11 +28,10 @@ struct ConfigFFT{N}
     end
 
     function ConfigFFT(
-        ngrids::Tuple{Vararg{Int, N}},
-        nwaves::Tuple{Vararg{Int, N}},
-	xranges::Tuple{
-	             Vararg{Tuple{Float64, Float64}, N}
-		 }) where N
+        ngrids::NTuple{N, Int},
+	nwaves::NTuple{N, Int},
+	xranges::NTuple{N, NTuple{2, Float64}}
+	) where N
 
 	carts = CartesianIndices(ngrids)
 	Xcoords = tuple(
