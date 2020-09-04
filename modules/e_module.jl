@@ -7,8 +7,8 @@ using FFTW
 struct ConfigFFT{N}
 
     ngrids::NTuple{N, Int}        # Number Of Grids
-    nwaves::NTuple{N, Int}   	  # Cutoff wavenumber,
-    		                  # ngrids[_] >= nwaves[_]
+    nwaves::NTuple{N, Int}   	  # Cutoff wavenumber
+    
     xranges::NTuple{N, NTuple{2, Float64}}
     				  # tuple of (min, max) s
     Xcoords::NTuple{N, Array{Float64, N}}
@@ -20,13 +20,14 @@ struct ConfigFFT{N}
     function ConfigFFT{N}(
         ngrids, nwaves, xranges, Xcoords, Kcoords) where N
 		 
-        if all(ngrids .>= nwaves)
+        if all(@. ngrids ÷ 2 >= nwaves)
 	    return new(ngrids, nwaves, xranges, Xcoords, Kcoords)
 	else
 	    println("ERROR")
 	end
     end
 
+    # EASY CONSTRUCTOR
     function ConfigFFT(
         ngrids::NTuple{N, Int},
 	nwaves::NTuple{N, Int},
@@ -34,23 +35,8 @@ struct ConfigFFT{N}
 	) where N
 
 	carts = CartesianIndices(ngrids)
-	Xcoords = tuple(
-	    (
-	        (indices
-		     -> xval(indices, dim, xranges[dim],
-		             dxgen(ngrids[dim], xranges[dim]))
-		).(carts)
-		for dim = 1:N
-	    )...
-	)
-	Kcoords = tuple(
-	    (
-	        (indices
-		     -> kval(indices, dim, ngrids[dim])
-		).(carts)
-		for dim = 1:N
-	    )...
-	)
+	Xcoords = Xcoordsgen(ngrids, xranges)
+	Kcoords = Kcoordsgen(ngrids, xranges)
 
 	return ConfigFFT{N}(
 	           ngrids, nwaves, xranges, Xcoords, Kcoords)
@@ -59,20 +45,53 @@ struct ConfigFFT{N}
 end
 
 # --- helper function for constuctor ---
-function xval(indices, dim, xrange, dx)
-    return xrange[1] + (indices[dim] - 1)*dx
+function Xcoordsgen(ngrids::NTuple{N, Int},
+	 	    xranges::NTuple{N, NTuple{2, Float64}}
+		   ) where N
+    _Xcoordgen(axis) = Xcoordgen(axis, ngrids, xranges)
+    return ntuple(_Xcoordgen, N)
 end
 
-function dxgen(ngrid, xrange)
-    return (xrange[2] - xrange[1]) / ngrid
+function Xcoordgen(axis::Int,
+		   ngrids::NTuple{N, Int},
+		   xranges::NTuple{N, NTuple{2, Float64}}
+		  ) where N
+    ngrid = ngrids[axis]
+    xrange = xranges[axis]
+    _Xcoordgen(indices) = (
+        (  (indices[axis] - 1)*xrange[2]
+	 - (indices[axis] - 2)*xrange[1] ) / ngrid
+    )
+    return _Xcoordgen.(CartesianIndices(ngrids))
 end
 
-function kval(indices, dim, ngrid)
-    k = indices[dim]
-    if k <= div(ngrid, 2)
-        return Complex{Float64}(k - 1)
-    else
-        return Complex{Float64}(k - ngrid - 1)
+function Kcoordsgen(ngrids::NTuple{N, Int},
+	 	    xranges::NTuple{N, NTuple{2, Float64}}
+		   ) where N
+    _Kcoordgen(axis) = Kcoordgen(axis, ngrids, xranges)
+    return ntuple(_Kcoordgen, N)
+end
+
+function Kcoordgen(axis::Int,
+		   ngrids::NTuple{N, Int},
+		   xranges::NTuple{N, NTuple{2, Float64}}
+		  ) where N
+    ngrid = ngrids[axis]
+    xrange = xranges[axis]
+    _Kcoordgen(indices) = (
+        kval(indices[axis], ngrid, xrange)
+    )
+    return _Kcoordgen.(CartesianIndices(ngrids))
+end
+
+function kval(index, ngrid, xrange)::Complex{Float64}
+    index0 = index - 1  # start by 0
+    if 2*index0 < ngrid
+        return index0
+    elseif 2*index0 == ngrid
+        return 0
+    elseif 2*index0 > ngrid
+        return index0 - ngrid
     end
 end
 
@@ -86,7 +105,7 @@ mutable struct XFunc{N} <: AbstractArray{Float64, N}
     vals::Array{Float64, N}
     config::ConfigFFT{N}
 
-    # constructor
+    # CONSTRUCTOR
     function XFunc{N}(vals::Array{Float64, N},
                       config::ConfigFFT{N}) where N
         if size(vals) == config.ngrids
@@ -96,12 +115,14 @@ mutable struct XFunc{N} <: AbstractArray{Float64, N}
         end
     end
 
+    # EASY CONSTRUCTOR
     function XFunc(vals::Array{T, N},
     	           config::ConfigFFT{N}
 		  ) where N where T <: Real
         return XFunc{N}(float(vals), config)
     end
 
+    # UNDEF CONSTRUCTOR
     function XFunc(undef::UndefInitializer,
 		   config::ConfigFFT{N}) where N
 	f_undef = Array{Float64, N}(undef, config.ngrids)
@@ -122,7 +143,7 @@ mutable struct KFunc{N} <: AbstractArray{Complex{Float64}, N}
     vals::Array{Complex{Float64}, N}
     config::ConfigFFT{N}
 
-    # constructor
+    # CONSTRUCTOR
     function KFunc{N}(vals::Array{Complex{Float64}, N},
                       config::ConfigFFT{N}) where N
         if size(vals) == config.ngrids
@@ -132,15 +153,17 @@ mutable struct KFunc{N} <: AbstractArray{Complex{Float64}, N}
         end
     end
 
+    # EASY CONSTRUCTOR
     function KFunc(vals::Array{T, N},
     	           config::ConfigFFT{N}
 		  ) where N where T <: Number
         return KFunc{N}(complex(float(vals)), config)
     end
 
+    # UNDEF CONSTRUCTOR
     function KFunc(undef::UndefInitializer,
                    config::ConfigFFT{N}) where N
-        f_undef = Array{Complex{Float64}, N}(undef, config.nwaves)
+        f_undef = Array{Complex{Float64}, N}(undef, config.grids)
 	return KFunc{N}(f_undef, config)
     end
 
@@ -156,7 +179,8 @@ Base.:copy(f::KFunc) = KFunc(copy(f.vals), f.config)
 #  Binomial Operators
 # *******************************************
 
-BINOP = ((:+, :.+), (:-, :.-), (:*, :.*), (:/, :./), (:\, :.\))
+BINOP = ((:+, :.+), (:-, :.-), (:*, :.*),
+         (:/, :./), (:\, :.\), (:^, :.^))
 
 # +++++ XFunc +++++
 Base.:+(f::XFunc) = f
@@ -203,7 +227,7 @@ end
 
 
 # *******************************************
-#  Coordinate Tools
+#  Coordinate Tools for specific dimensions
 # *******************************************
 # +++++ Coordinate in X-space ++++++++++
 function x_Xgen(config::ConfigFFT{1})
@@ -266,7 +290,8 @@ ELEMFUNC = (
     :asin, :acos, :atan, :acot, :asec, :acsc,
     :asinh, :acosh, :atanh, :acoth, :asech, :acsch,
     :sinpi, :cospi, :sinc, :cosc,
-    :exp, :log
+    :exp, :log, :sqrt, :cbrt,
+    :abs
 )
 
 for fn = ELEMFUNC
@@ -277,10 +302,121 @@ for fn = ELEMFUNC
 end
 
 # *******************************************
+#  Operators for Complex Numbers
+# *******************************************
+OPERATOR = (
+    :real, :imag, :reim, :conj
+)
+
+for op = OPERATOR
+    @eval Base.$op(K_F::KFunc) = KFunc($op(K_F.vals), K_F.config)
+end
+
+
+# *******************************************
 #  Low/High-pass Filter
 # *******************************************
+# +++++ general pass filter +++++
+function pass_K!(f::KFunc{N},
+		 slices::NTuple{N, UnitRange{Int}}
+		) where N
+    vals = copy(f.vals)
+    vals[slices...] .= 0.0 + 0.0im
+    f.vals -= vals
+end
 
-# To Be Implemented!
+
+# +++++ high-pass filter +++++
+function highpass_K!(f::KFunc{N},
+		     min_nwaves::NTuple{N, Int}
+		    ) where N
+    ngrids = f.config.ngrids
+    if any(@. min_nwaves > ngrids ÷ 2)
+        println("WARNING: all waves are suppressed")
+	f.vals .= 0.
+    else
+        floors = tuple(ones(Int, N)...)
+	ceils = ngrids
+	min_indices = @. max(floors, floors + min_nwaves)
+	max_indices = @. min(ceils, ceils - min_nwaves + 1)
+	
+	slices = ((x, y) -> x:y).(min_indices, max_indices)
+	pass_K!(f, slices)
+    end
+end
+
+function K_highpass_K(f::KFunc{N},
+		      min_nwaves::NTuple{N, Int}
+		     ) where N
+    g = copy(f)
+    highpass_K!(g, min_nwaves)
+    return g
+end
+
+
+# +++++ low-pass filter +++++
+function lowpass_K!(f::KFunc{N},
+		    max_nwaves::NTuple{N, Int}
+		   ) where N
+		   
+    ngrids = f.config.ngrids
+    nshifts = @. (ngrids - 1) ÷ 2
+    circshift!(f.vals, copy(f.vals), nshifts) # SHIFT!!!
+
+    center_indices = @. (ngrids + 1) ÷ 2
+
+    if any(max_nwaves .< 0)
+        println("WARNING: all waves are suppressed")
+	f.vals .= 0.
+    else
+        floors = tuple(ones(Int, N)...)
+	ceils = ngrids
+	min_indices = @. max(floors, center_indices - max_nwaves)
+	max_indices = @. min(ceils, center_indices + max_nwaves)
+
+	slices = ((x, y) -> x:y).(min_indices, max_indices)
+	pass_K!(f, slices)
+    end
+
+    ndeshifts = .-(tuple(nshifts...))
+    circshift!(f.vals, copy(f.vals), ndeshifts) # DESHIFT!!!
+
+end
+
+function K_lowpass_K(f::KFunc{N},
+		     min_nwaves::NTuple{N, Int}
+		    ) where N
+    g = copy(f)
+    lowpass_K!(g, min_nwaves)
+    return g
+end
+
+# +++++ aliases for specific dimensins +++++
+# @@@ high-pass filter @@@
+function k_highpass_k(f::KFunc{1}, min_nwaves::Tuple{Int})
+    return K_highpass_K(f, min_nwaves)
+end
+
+function kl_highpass_kl(f::KFunc{2}, min_nwaves::NTuple{2, Int})
+    return K_highpass_K(f, min_nwaves)
+end
+
+function klm_highpass_klm(f::KFunc{3}, min_nwaves::NTuple{3, Int})
+    return K_highpass_K(f, min_nwaves)
+end
+
+# @@@ low-pass filter @@@
+function k_lowpass_k(f::KFunc{1}, max_nwaves::Tuple{Int})
+    return K_lowpass_K(f, max_nwaves)
+end
+
+function kl_lowpass_kl(f::KFunc{2}, max_nwaves::NTuple{2, Int})
+    return K_lowpass_K(f, max_nwaves)
+end
+
+function klm_lowpass_klm(f::KFunc{3}, max_nwaves::NTuple{3, Int})
+    return K_lowpass_K(f, max_nwaves)
+end
 
 
 # *******************************************
@@ -307,31 +443,16 @@ function DXd_K!(K_func::KFunc{N}, d::Int) where N
 
     vals = K_func.vals
     config = K_func.config
+    
     ngrid = config.ngrids[d]
     xrange = config.xranges[d]
     xlen = xrange[2] - xrange[1]
     K_Kd = config.Kcoords[d]
 
-    if ngrid % 2 == 0
-        cut_highest_wave!(vals, d, ngrid)
-    end
     vals .*= (2π*im/xlen)*K_Kd
 
 end
 
-function cut_highest_wave!(vals, d, ngrid)
-
-    slice = [
-        n == d ? div(ngrid, 2) : Colon()
-	for n = 1:ndims(vals)
-    ]
-    if ndims(vals) == 1
-        vals[slice...] = 0.
-    else
-        vals[slice...] .= 0.
-    end
-
-end
 
 Dx_k!(k_func::KFunc{1}) = DXd_K!(k_func, 1)
 
