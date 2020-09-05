@@ -20,7 +20,7 @@ struct ConfigFFT{N}
     function ConfigFFT{N}(
         ngrids, nwaves, xranges, Xcoords, Kcoords) where N
 
-        if all(@. ngrids ÷ 2 >= nwaves)
+        if all(@. ngrids ÷ 2 ≧ nwaves)
 	    	return new(ngrids, nwaves, xranges, Xcoords, Kcoords)
 		else
 	    	println("ERROR")
@@ -551,20 +551,47 @@ end
 
 X_∂Xaxis_X = X_K ∘ K_∂Xaxis_X ∘ K_X
 
+function K_laplacian_K(f::KFunc{N} where N)
+
+	return sum(
+		K_∂Xaxis_K(K_∂Xaxis_K(f, axis), axis)
+		for axis = 1:N
+	)
+
+end
+
+K_Δ_K = K_laplacian_K
+X_laplacian_X = X_K ∘ K_laplacian_K ∘ K_X
+X_Δ_X = X_laplacian_X
+
+# aliaces
+# 1-dimensional
 k_∂x_k(k_func::KFunc{1}) = K_∂Xaxis_K(k_func, 1)
 x_∂x_x(x_func::XFunc{1}) = X_∂Xaxis_X(x_func, 1)
 
+# 2-dimensional
 kl_∂x_kl(kl_func::KFunc{2}) = K_∂Xaxis_K(kl_func, 1)
 kl_∂y_kl(kl_func::KFunc{2}) = K_∂Xaxis_K(kl_func, 2)
+kl_laplacian_kl(kl_func::KFunc{2}) = K_laplacian_K(kl_func)
+kl_Δ_kl = kl_laplacian_kl
+
 xy_∂x_xy(xy_func::XFunc{2}) = X_∂Xaxis_X(xy_func, 1)
 xy_∂y_xy(xy_func::XFunc{2}) = X_∂Xaxis_X(xy_func, 2)
+xy_laplacian_xy(xy_func::XFunc{2}) = X_laplacian_X(xy_func)
+xy_Δ_xy = xy_laplacian_xy
 
+# 3-dimensional
 klm_∂x_klm(klm_func::KFunc{3}) = K_∂Xaxis_K(klm_func, 1)
 klm_∂y_klm(klm_func::KFunc{3}) = K_∂Xaxis_K(klm_func, 2)
 klm_∂z_klm(klm_func::KFunc{3}) = K_∂Xaxis_K(klm_func, 3)
+klm_laplacian_klm(klm_func::KFunc{3}) = K_laplacian_K(klm_func)
+klm_Δ_klm = klm_laplacian_klm
+
 xyz_∂x_xyz(xyz_func::KFunc{3}) = X_∂Xaxis_X(xyz_func, 1)
 xyz_∂y_xyz(xyz_func::KFunc{3}) = X_∂Xaxis_X(xyz_func, 2)
 xyz_∂z_xyz(xyz_func::KFunc{3}) = X_∂Xaxis_X(xyz_func, 3)
+xyz_laplacian_xyz(xyz_func::XFunc{3}) = X_laplacian_X(xyz_func)
+xyz_Δ_xyz = xyz_laplacian_xyz
 
 # +++ tools for vector analysis +++
 # 2-dimensional
@@ -655,19 +682,23 @@ end
 ∫(f) = integ_X(f)
 
 function norm_X(f::XFunc, p::Real=2)
+
 	if p == Inf
 		return max(abs(f)...)
 	else
     	return ( ∫( abs(f)^p ) )^(1/p)
 	end
+
 end
 
 function l2inpr_X_X(f::XFunc{N}, g::XFunc{N}) where N
+
     if f.config === g.config
 		return ∫(f * g)
     else
         println("ERROR")
     end
+
 end
 
 # aliaces
@@ -675,9 +706,9 @@ integ_x(x_func::XFunc{1}) = integ_X(x_func)
 integ_xy(xy_func::XFunc{2}) = integ_X(xy_func)
 integ_xyz(xyz_func::XFunc{3}) = integ_X(xyz_func)
 
-norm_x(x_func::XFunc{1}) = norm_X(x_func)
-norm_xy(xy_func::XFunc{2}) = norm_X(xy_func)
-norm_xyz(xyz_func::XFunc{3}) = norm_X(xyz_func)
+norm_x(x_func::XFunc{1}, p::Real=2) = norm_X(x_func, p)
+norm_xy(xy_func::XFunc{2}, p::Real=2) = norm_X(xy_func, p)
+norm_xyz(xyz_func::XFunc{3}, p::Real=2) = norm_X(xyz_func, p)
 
 l2inpr_x_x(x_f::XFunc{1}, x_g::XFunc{1}) = l2inpr_X_X(x_f, x_g)
 l2inpr_xy_xy(xy_f::XFunc{2}, xy_g::XFunc{2}) = l2inpr_X_X(xy_f, xy_g)
