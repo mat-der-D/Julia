@@ -7,48 +7,48 @@ using FFTW
 struct ConfigFFT{N}
 
     ngrids::NTuple{N, Int}        # Number Of Grids
-    nwaves::NTuple{N, Int}   	  # Cutoff wavenumber
+    nwaves::NTuple{N, Int}         # Cutoff wavenumber
 
     xranges::NTuple{N, NTuple{2, Float64}}
-    				  # tuple of (min, max) s
+                      # tuple of (min, max) s
     Xcoords::NTuple{N, Array{Float64, N}}
-    				  # X-coordinates
+                      # X-coordinates
     Kcoords::NTuple{N, Array{Complex{Float64}, N}}
-    				  # K-coordinates
+                      # K-coordinates
 
     # CONSTRUCTOR
     function ConfigFFT{N}(
         ngrids, nwaves, xranges, Xcoords, Kcoords) where N
 
         if all(@. ngrids ÷ 2 ≧ nwaves)
-	    	return new(ngrids, nwaves, xranges, Xcoords, Kcoords)
-		else
-	    	println("ERROR")
-		end
-	end
+            return new(ngrids, nwaves, xranges, Xcoords, Kcoords)
+        else
+            println("ERROR")
+        end
+    end
 
-	# EASY CONSTRUCTOR
-	function ConfigFFT(
-    		ngrids::NTuple{N, Int},
-			nwaves::NTuple{N, Int},
-			xranges::NTuple{N, NTuple{2, Float64}}
-		) where N
+    # EASY CONSTRUCTOR
+    function ConfigFFT(
+            ngrids::NTuple{N, Int},
+            nwaves::NTuple{N, Int},
+            xranges::NTuple{N, NTuple{2, Float64}}
+        ) where N
 
-		carts = CartesianIndices(ngrids)
-		Xcoords = Xcoordsgen(ngrids, xranges)
-		Kcoords = Kcoordsgen(ngrids, xranges)
+        carts = CartesianIndices(ngrids)
+        Xcoords = Xcoordsgen(ngrids, xranges)
+        Kcoords = Kcoordsgen(ngrids, xranges)
 
-		return ConfigFFT{N}(
-			ngrids, nwaves, xranges, Xcoords, Kcoords)
+        return ConfigFFT{N}(
+            ngrids, nwaves, xranges, Xcoords, Kcoords)
     end
 
 end
 
 # --- helper function for constuctor ---
 function Xcoordsgen(
-			ngrids::NTuple{N, Int},
-			xranges::NTuple{N, NTuple{2, Float64}}
-		) where N
+            ngrids::NTuple{N, Int},
+            xranges::NTuple{N, NTuple{2, Float64}}
+        ) where N
 
     _Xcoordgen(axis) = Xcoordgen(axis, ngrids, xranges)
     return ntuple(_Xcoordgen, N)
@@ -56,36 +56,36 @@ function Xcoordsgen(
 end
 
 function Xcoordgen(
-			axis::Int,
-			ngrids::NTuple{N, Int},
-		   	xranges::NTuple{N, NTuple{2, Float64}}
-		) where N
+            axis::Int,
+            ngrids::NTuple{N, Int},
+               xranges::NTuple{N, NTuple{2, Float64}}
+        ) where N
 
     ngrid = ngrids[axis]
     xrange = xranges[axis]
     _Xcoordgen(indices) = (
-    	(  (indices[axis] - 1)*xrange[2]
-		 - (indices[axis] - 2)*xrange[1] ) / ngrid
+        (  (indices[axis] - 1)*xrange[2]
+         - (indices[axis] - 2)*xrange[1] ) / ngrid
     )
     return _Xcoordgen.(CartesianIndices(ngrids))
 
 end
 
 function Kcoordsgen(
-			ngrids::NTuple{N, Int},
-			xranges::NTuple{N, NTuple{2, Float64}}
-		) where N
+            ngrids::NTuple{N, Int},
+            xranges::NTuple{N, NTuple{2, Float64}}
+        ) where N
 
-	_Kcoordgen(axis) = Kcoordgen(axis, ngrids, xranges)
+    _Kcoordgen(axis) = Kcoordgen(axis, ngrids, xranges)
     return ntuple(_Kcoordgen, N)
 
 end
 
 function Kcoordgen(
-			axis::Int,
-			ngrids::NTuple{N, Int},
-			xranges::NTuple{N, NTuple{2, Float64}}
-		) where N
+            axis::Int,
+            ngrids::NTuple{N, Int},
+            xranges::NTuple{N, NTuple{2, Float64}}
+        ) where N
 
     ngrid = ngrids[axis]
     xrange = xranges[axis]
@@ -121,9 +121,9 @@ mutable struct XFunc{N} <: AbstractArray{Float64, N}
 
     # CONSTRUCTOR
     function XFunc{N}(
-				vals::Array{Float64, N},
-    			config::ConfigFFT{N}
-			) where N
+                vals::Array{Float64, N},
+                config::ConfigFFT{N}
+            ) where N
 
         if size(vals) == config.ngrids
             return new(vals, config)
@@ -135,9 +135,9 @@ mutable struct XFunc{N} <: AbstractArray{Float64, N}
 
     # EASY CONSTRUCTOR
     function XFunc(
-				vals::Array{T, N},
-				config::ConfigFFT{N}
-			) where N where T <: Real
+                vals::Array{T, N},
+                config::ConfigFFT{N}
+            ) where N where T <: Real
 
         XFunc{N}(float(vals), config)
 
@@ -145,11 +145,11 @@ mutable struct XFunc{N} <: AbstractArray{Float64, N}
 
     # UNDEF CONSTRUCTOR
     function XFunc(
-				undef::UndefInitializer,
-				config::ConfigFFT{N}
-				) where N
+                undef::UndefInitializer,
+                config::ConfigFFT{N}
+                ) where N
 
-		f_undef = Array{Float64, N}(undef, config.ngrids)
+        f_undef = Array{Float64, N}(undef, config.ngrids)
         return XFunc{N}(f_undef, config)
 
     end
@@ -160,12 +160,12 @@ Base.:size(f::XFunc) = size(f.vals)
 
 Base.:getindex(f::XFunc, i::Int) = getindex(f.vals, i)
 function Base.:getindex(f::XFunc{N}, I::Vararg{Int, N}) where N
-	getindex(f.vals, I...)
+    getindex(f.vals, I...)
 end
 
 Base.:setindex!(f::XFunc, v, i::Int) = setindex!(f.vals, v, i)
 function Base.:setindex!(f::XFunc{N}, v, I::Vararg{Int, N}) where N
-	setindex!(f, v, I...)
+    setindex!(f, v, I...)
 end
 
 Base.:copy(f::XFunc) = XFunc(copy(f.vals), f.config)
@@ -179,9 +179,9 @@ mutable struct KFunc{N} <: AbstractArray{Complex{Float64}, N}
 
     # CONSTRUCTOR
     function KFunc{N}(
-				vals::Array{Complex{Float64}, N},
-            	config::ConfigFFT{N}
-			) where N
+                vals::Array{Complex{Float64}, N},
+                config::ConfigFFT{N}
+            ) where N
 
         if size(vals) == config.ngrids
             return new(vals, config)
@@ -193,20 +193,20 @@ mutable struct KFunc{N} <: AbstractArray{Complex{Float64}, N}
 
     # EASY CONSTRUCTOR
     function KFunc(
-				vals::Array{T, N},
-				config::ConfigFFT{N}
-			) where N where T <: Number
+                vals::Array{T, N},
+                config::ConfigFFT{N}
+            ) where N where T <: Number
         KFunc{N}(complex(float(vals)), config)
     end
 
     # UNDEF CONSTRUCTOR
     function KFunc(
-				undef::UndefInitializer,
-				config::ConfigFFT{N}
-			) where N
+                undef::UndefInitializer,
+                config::ConfigFFT{N}
+            ) where N
 
-		f_undef = Array{Complex{Float64}, N}(undef, config.ngrids)
-		return KFunc{N}(f_undef, config)
+        f_undef = Array{Complex{Float64}, N}(undef, config.ngrids)
+        return KFunc{N}(f_undef, config)
 
     end
 
@@ -216,12 +216,12 @@ Base.:size(f::KFunc) = size(f.vals)
 
 Base.:getindex(f::KFunc, i::Int) = getindex(f.vals, i)
 function Base.:getindex(f::KFunc{N}, I::Vararg{Int, N}) where N
-	getindex(f.vals, I...)
+    getindex(f.vals, I...)
 end
 
 Base.:setindex!(f::KFunc, v, i::Int) = setindex!(f.vals, v, i)
 function Base.:setindex!(f::KFunc{N}, v, I::Vararg{Int, N}) where N
-	setindex!(f, v, I...)
+    setindex!(f, v, I...)
 end
 
 Base.:copy(f::KFunc) = KFunc(copy(f.vals), f.config)
@@ -231,8 +231,8 @@ Base.:copy(f::KFunc) = KFunc(copy(f.vals), f.config)
 #  Binomial Operators
 # *******************************************
 BINOP = (
-	(:+, :.+), (:-, :.-), (:*, :.*),
-	(:/, :./), (:\, :.\), (:^, :.^)
+    (:+, :.+), (:-, :.-), (:*, :.*),
+    (:/, :./), (:\, :.\), (:^, :.^)
 )
 
 # +++++ XFunc +++++
@@ -244,19 +244,19 @@ Base.:inv(f::XFunc) = f \ 1.0
 for (op, opd) = BINOP
     @eval begin
         function Base.$op(f::XFunc, g::XFunc)
-	    	if f.config == g.config
-	        	return XFunc($opd(f.vals, g.vals), f.config)
-	    	else
-	        	println("ERROR")
-	    	end
-		end
+            if f.config == g.config
+                return XFunc($opd(f.vals, g.vals), f.config)
+            else
+                println("ERROR")
+            end
+        end
 
-		Base.$op(f::XFunc, a::Real) = (
-			XFunc($opd(f.vals, a), f.config)
-		)
-		Base.$op(a::Real, f::XFunc) = (
-			   XFunc($opd(a, f.vals), f.config)
-		)
+        Base.$op(f::XFunc, a::Real) = (
+            XFunc($opd(f.vals, a), f.config)
+        )
+        Base.$op(a::Real, f::XFunc) = (
+               XFunc($opd(a, f.vals), f.config)
+        )
     end
 end
 
@@ -271,19 +271,19 @@ Base.:inv(f::KFunc) = f \ 1.0
 for (op, opd) = BINOP
     @eval begin
         function Base.$op(f::KFunc, g::KFunc)
-	    	if f.config == g.config
-	        	return KFunc($opd(f.vals, g.vals), f.config)
-	    	else
-	        	println("ERROR")
-	    	end
-		end
+            if f.config == g.config
+                return KFunc($opd(f.vals, g.vals), f.config)
+            else
+                println("ERROR")
+            end
+        end
 
-		Base.$op(f::KFunc, a::Number) = (
-			KFunc($opd(f.vals, a), f.config)
-		)
-		Base.$op(a::Number, f::KFunc) = (
-			KFunc($opd(a, f.vals), f.config)
-		)
+        Base.$op(f::KFunc, a::Number) = (
+            KFunc($opd(f.vals, a), f.config)
+        )
+        Base.$op(a::Number, f::KFunc) = (
+            KFunc($opd(a, f.vals), f.config)
+        )
     end
 end
 
@@ -359,7 +359,7 @@ ELEMFUNC = (
 for fn = ELEMFUNC
     @eval begin
         Base.$fn(f::XFunc) = XFunc($fn.(f.vals), f.config)
-		Base.$fn(f::KFunc) = KFunc($fn.(f.vals), f.config)
+        Base.$fn(f::KFunc) = KFunc($fn.(f.vals), f.config)
     end
 end
 
@@ -380,9 +380,9 @@ end
 # *******************************************
 # +++++ general pass filter +++++
 function pass_K!(
-			f::KFunc{N},
-			slices::NTuple{N, UnitRange{Int}}
-		) where N
+            f::KFunc{N},
+            slices::NTuple{N, UnitRange{Int}}
+        ) where N
 
     vals = copy(f.vals)
     vals[slices...] .= 0.0 + 0.0im
@@ -393,28 +393,28 @@ end
 
 # +++++ high-pass filter +++++
 function highpass_K!(
-			f::KFunc{N},
-			min_nwaves::NTuple{N, Int}
-		) where N
+            f::KFunc{N},
+            min_nwaves::NTuple{N, Int}
+        ) where N
     ngrids = f.config.ngrids
     if any(@. min_nwaves > ngrids ÷ 2)
         println("WARNING: all waves are suppressed")
-		f.vals .= 0.
+        f.vals .= 0.
     else
         floors = tuple(ones(Int, N)...)
-		ceils = ngrids
-		min_indices = @. max(floors, floors + min_nwaves)
-		max_indices = @. min(ceils, ceils + 1 - min_nwaves)
+        ceils = ngrids
+        min_indices = @. max(floors, floors + min_nwaves)
+        max_indices = @. min(ceils, ceils + 1 - min_nwaves)
 
-		slices = make_slice.(min_indices, max_indices)
-		pass_K!(f, slices)
+        slices = make_slice.(min_indices, max_indices)
+        pass_K!(f, slices)
     end
 end
 
 function K_highpass_K(
-			f::KFunc{N},
-			min_nwaves::NTuple{N, Int}
-		) where N
+            f::KFunc{N},
+            min_nwaves::NTuple{N, Int}
+        ) where N
 
     g = copy(f)
     highpass_K!(g, min_nwaves)
@@ -425,9 +425,9 @@ end
 
 # +++++ low-pass filter +++++
 function lowpass_K!(
-			f::KFunc{N},
-			max_nwaves::NTuple{N, Int}
-		) where N
+            f::KFunc{N},
+            max_nwaves::NTuple{N, Int}
+        ) where N
 
     ngrids = f.config.ngrids
     nshifts = @. (ngrids - 1) ÷ 2
@@ -437,19 +437,19 @@ function lowpass_K!(
 
     if any(max_nwaves .< 0)
         println("WARNING: all waves are suppressed")
-		f.vals .= 0.
+        f.vals .= 0.
     else
         floors = tuple(ones(Int, N)...)
-		ceils = ngrids
-		min_indices = (
-			@. max(floors, center_indices - max_nwaves)
-		)
-		max_indices = (
-			@. min(ceils, center_indices + max_nwaves)
-		)
+        ceils = ngrids
+        min_indices = (
+            @. max(floors, center_indices - max_nwaves)
+        )
+        max_indices = (
+            @. min(ceils, center_indices + max_nwaves)
+        )
 
-		slices = make_slice.(min_indices, max_indices)
-		pass_K!(f, slices)
+        slices = make_slice.(min_indices, max_indices)
+        pass_K!(f, slices)
     end
 
     ndeshifts = .-(tuple(nshifts...))
@@ -458,9 +458,9 @@ function lowpass_K!(
 end
 
 function K_lowpass_K(
-			f::KFunc{N},
-			min_nwaves::NTuple{N, Int}
-		) where N
+            f::KFunc{N},
+            min_nwaves::NTuple{N, Int}
+        ) where N
 
     g = copy(f)
     lowpass_K!(g, min_nwaves)
@@ -553,10 +553,10 @@ X_∂Xaxis_X = X_K ∘ K_∂Xaxis_X ∘ K_X
 
 function K_laplacian_K(f::KFunc{N} where N)
 
-	return sum(
-		K_∂Xaxis_K(K_∂Xaxis_K(f, axis), axis)
-		for axis = 1:N
-	)
+    return sum(
+        K_∂Xaxis_K(K_∂Xaxis_K(f, axis), axis)
+        for axis = 1:N
+    )
 
 end
 
@@ -596,74 +596,74 @@ xyz_Δ_xyz = xyz_laplacian_xyz
 # +++ tools for vector analysis +++
 # 2-dimensional
 function kl2_grad_kl(kl_func::KFunc{2})::Vector{KFunc{2}}
-	return [
-		kl_∂x_kl(kl_func)
-		kl_∂y_kl(kl_func)
-	]
+    return [
+        kl_∂x_kl(kl_func)
+        kl_∂y_kl(kl_func)
+    ]
 end
 
 function kl_rot_kl2(kl2_func::Vector{KFunc{2}})::KFunc{2}
 
-	if length(kl2_func) != 2
-		return println("ERROR")
-	end
-	return (
-		kl_∂x_kl(kl2_func[2])
-		- kl_∂y_kl(kl2_func[1])
-	)
+    if length(kl2_func) != 2
+        return println("ERROR")
+    end
+    return (
+        kl_∂x_kl(kl2_func[2])
+        - kl_∂y_kl(kl2_func[1])
+    )
 end
 
 function kl_div_kl2(kl2_func::Vector{KFunc{2}})::KFunc{2}
 
-	if length(kl2_func) != 2
-		return println("ERROR")
-	end
-	return (
-		kl_∂x_kl(kl2_func[1])
-		+ kl_∂y_kl(kl2_func[2])
-	)
+    if length(kl2_func) != 2
+        return println("ERROR")
+    end
+    return (
+        kl_∂x_kl(kl2_func[1])
+        + kl_∂y_kl(kl2_func[2])
+    )
 end
 
 # 3-dimensional
 function klm3_grad_klm(
-			klm_func::KFunc{3}
-		)::Vector{KFunc{3}}
+            klm_func::KFunc{3}
+        )::Vector{KFunc{3}}
 
-	return [
-		klm_∂x_klm(klm_func)
-		klm_∂y_klm(klm_func)
-		klm_∂z_klm(klm_func)
-	]
+    return [
+        klm_∂x_klm(klm_func)
+        klm_∂y_klm(klm_func)
+        klm_∂z_klm(klm_func)
+    ]
 
 end
 
 function klm3_rot_klm(
-			klm3_func::Vector{KFunc{3}}
-		)::Vector{KFunc{3}}
+            klm3_func::Vector{KFunc{3}}
+        )::Vector{KFunc{3}}
 
-	if length(klm3_func) != 3
-		return println("ERROR")
-	end if
-	return [
-		klm_∂y_klm(klm3_func[3]) - klm_∂z_klm(klm3_func[2])
-		klm_∂z_klm(klm3_func[1]) - klm_∂x_klm(klm3_func[3])
-		klm_∂x_klm(klm3_func[2]) - klm_∂y_klm(klm3_func[1])
-	]
+    if length(klm3_func) != 3
+        return println("ERROR")
+    end if
+    return [
+        klm_∂y_klm(klm3_func[3]) - klm_∂z_klm(klm3_func[2])
+        klm_∂z_klm(klm3_func[1]) - klm_∂x_klm(klm3_func[3])
+        klm_∂x_klm(klm3_func[2]) - klm_∂y_klm(klm3_func[1])
+    ]
 
 end
 
 function klm_div_klm3(
-			klm3_func::Vector{KFunc{3}}
-		)::KFunc{3}
+            klm3_func::Vector{KFunc{3}}
+        )::KFunc{3}
 
-	if length(klm3_func) != 3
-		return println("ERROR")
-	end
-	return (
-		klm_∂x_klm(klm3_func[1])
-		+ klm_∂y_klm(klm3_func[2])
-		+ klm_∂z_klm(klm3_func[3])
-	)
+    if length(klm3_func) != 3
+        return println("ERROR")
+    end
+    return (
+        klm_∂x_klm(klm3_func[1])
+        + klm_∂y_klm(klm3_func[2])
+        + klm_∂z_klm(klm3_func[3])
+    )
 
 end
 
@@ -683,18 +683,18 @@ end
 
 function norm_X(f::XFunc, p::Real=2)
 
-	if p == Inf
-		return max(abs(f)...)
-	else
-    	return ( ∫( abs(f)^p ) )^(1/p)
-	end
+    if p == Inf
+        return max(abs(f)...)
+    else
+        return ( ∫( abs(f)^p ) )^(1/p)
+    end
 
 end
 
 function l2inpr_X_X(f::XFunc{N}, g::XFunc{N}) where N
 
     if f.config === g.config
-		return ∫(f * g)
+        return ∫(f * g)
     else
         println("ERROR")
     end
