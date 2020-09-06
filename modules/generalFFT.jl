@@ -20,7 +20,7 @@ struct ConfigFFT{N}
     function ConfigFFT{N}(
         ngrids, nwaves, xranges, Xcoords, Kcoords) where N
 
-        if all(@. ngrids ÷ 2 ≧ nwaves)
+        if all(@. ngrids ÷ 2 >= nwaves)
             return new(ngrids, nwaves, xranges, Xcoords, Kcoords)
         else
             println("ERROR")
@@ -58,7 +58,7 @@ end
 function Xcoordgen(
             axis::Int,
             ngrids::NTuple{N, Int},
-               xranges::NTuple{N, NTuple{2, Float64}}
+            xranges::NTuple{N, NTuple{2, Float64}}
         ) where N
 
     ngrid = ngrids[axis]
@@ -459,11 +459,11 @@ end
 
 function K_lowpass_K(
             f::KFunc{N},
-            min_nwaves::NTuple{N, Int}
+            max_nwaves::NTuple{N, Int}
         ) where N
 
     g = copy(f)
-    lowpass_K!(g, min_nwaves)
+    lowpass_K!(g, max_nwaves)
     return g
 
 end
@@ -497,6 +497,87 @@ end
 
 function klm_lowpass_klm(f::KFunc{3}, max_nwaves::NTuple{3, Int})
     K_lowpass_K(f, max_nwaves)
+end
+
+
+# *******************************************
+#  De-aliasing
+# *******************************************
+# 3/2-rule ... zero-padding
+# 2/3-rule ... truncating
+
+# de-aliased product by 3/2-rule (zero padding)
+function K_dealiasedprod_32_K_K(f::KFunc, g::KFunc)
+
+    if !(f.config === g.config)
+        return println("ERROR")
+    end
+
+    fvals_pad = padding(f)
+    gvals_pad = padding(g)
+    fgvals_pad = fft(
+        real(ifft(fvals_pad)) .* real(ifft(gvals_pad))
+    )
+    fgvals = truncate(fgvals_pad, f.config)
+
+    return KFunc(fgvals, f.config)
+
+end
+
+function padding(f::KFunc)
+    config = f.config
+
+    ngrids = config.ngrids
+    pad_ngrids = @. ngrids ÷ 2 * 3
+
+    nshifts = @. (ngrids - 1) ÷ 2
+    vals_shift = circshift(f.vals, nshifts) # SHIFT
+
+    padded = zeros(Complex{Float64}, pad_ngrids)
+    padded[Base.OneTo.(ngrids)...] = vals_shift
+    ndeshifts = .-(tuple(nshifts...))
+    circshift!(padded, copy(padded), ndeshifts) # DESHIFT
+
+    return padded
+end
+
+function truncate(
+            padded::Array{Complex{Float64},N},
+            config::ConfigFFT{N}
+        ) where N
+
+    ngrids = config.ngrids
+    pad_ngrids = @. ngrids ÷ 2 * 3
+
+    nshifts = @. (ngrids - 1) ÷ 2
+    circshift!(padded, copy(padded), nshifts) # SHIFT
+
+    ndeshifts = .-(tuple(nshifts...))
+    vals = circshift(
+        padded[Base.OneTo.(ngrids)...], ndeshifts
+    )
+
+    N_origin = prod(ngrids)
+    N_padded = prod(pad_ngrids)
+    vals *= N_padded / N_origin
+
+    return vals
+
+end
+
+# de-aliased product by 2/3-rule (truncation)
+function K_dealiasedprod_23_K_K(f::KFunc, g::KFunc)
+
+    if !(f.config === g.config)
+        return println("ERROR")
+    end
+    config = f.config
+    ngrids = config.ngrids
+    max_nwaves = @. ngrids ÷ 3
+    f_trunc = K_lowpass_K(f, max_nwaves)
+    g_trunc = K_lowpass_K(g, max_nwaves)
+    return K_X(X_K(f_trunc) * X_K(g_trunc))
+
 end
 
 
@@ -549,7 +630,9 @@ function K_∂Xaxis_K(f::KFunc, axis::Int)
 
 end
 
-X_∂Xaxis_X = X_K ∘ K_∂Xaxis_X ∘ K_X
+function X_∂Xaxis_X(f::XFunc, axis::Int)
+    return X_K(K_∂Xaxis_K(K_X(f), axis))
+end
 
 function K_laplacian_K(f::KFunc{N} where N)
 
@@ -564,7 +647,7 @@ K_Δ_K = K_laplacian_K
 X_laplacian_X = X_K ∘ K_laplacian_K ∘ K_X
 X_Δ_X = X_laplacian_X
 
-# aliaces
+# aliases
 # 1-dimensional
 k_∂x_k(k_func::KFunc{1}) = K_∂Xaxis_K(k_func, 1)
 x_∂x_x(x_func::XFunc{1}) = X_∂Xaxis_X(x_func, 1)
@@ -643,7 +726,7 @@ function klm3_rot_klm(
 
     if length(klm3_func) != 3
         return println("ERROR")
-    end if
+    end
     return [
         klm_∂y_klm(klm3_func[3]) - klm_∂z_klm(klm3_func[2])
         klm_∂z_klm(klm3_func[1]) - klm_∂x_klm(klm3_func[3])
@@ -701,7 +784,7 @@ function l2inpr_X_X(f::XFunc{N}, g::XFunc{N}) where N
 
 end
 
-# aliaces
+# aliases
 integ_x(x_func::XFunc{1}) = integ_X(x_func)
 integ_xy(xy_func::XFunc{2}) = integ_X(xy_func)
 integ_xyz(xyz_func::XFunc{3}) = integ_X(xyz_func)
