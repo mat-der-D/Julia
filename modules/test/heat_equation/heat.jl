@@ -36,10 +36,23 @@ function main()
     x_X = c.Xcoords[1]
     # plot(x_X, x_u.vals)
 
-    k_u = time_develop(k_u, 50.0)
-    x_u = x_k(k_u)
+    t_st = 0.
+    t_ed = 10.
+    nt = 100
+    dt = (t_ed - t_st) / nt
 
-    plot(x_X, x_u.vals)
+    anim = Animation()
+
+    for it = 0:nt
+        x_u = x_k(k_u)
+        plt = plot(x_X, x_u.vals,
+                ylims=(0., 0.25), labels="heat")
+        frame(anim, plt)
+        if it < nt
+            k_u = time_develop(k_u, dt)
+        end
+    end
+    gif(anim, "heat_diffusion.gif", fps = 10)
 
 end
 
