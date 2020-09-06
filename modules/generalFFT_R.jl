@@ -60,7 +60,7 @@ function Xcoordgen(
     xrange = xranges[axis]
     _Xcoordgen(indices) = (
         (  (indices[axis] - 1)*xrange[2]
-         - (indices[axis] - 2)*xrange[1] ) / ngrid
+         + (ngrid - indices[axis] + 1)*xrange[1] ) / ngrid
     )
     return _Xcoordgen.(CartesianIndices(ngrids))
 
