@@ -6,31 +6,26 @@ using FFTW
 # *******************************************
 struct ConfigFFT{N}
 
-    ngrids::NTuple{N, Int}        # Number Of Grids
-    nwaves::NTuple{N, Int}         # Cutoff wavenumber
+    ngrids::NTuple{N, Int}
+                    # Number Of Grids
 
     xranges::NTuple{N, NTuple{2, Float64}}
-                      # tuple of (min, max) s
+                    # tuple of (min, max) s
     Xcoords::NTuple{N, Array{Float64, N}}
-                      # X-coordinates
+                    # X-coordinates
     Kcoords::NTuple{N, Array{Complex{Float64}, N}}
-                      # K-coordinates
+                    # K-coordinates
 
     # CONSTRUCTOR
     function ConfigFFT{N}(
-        ngrids, nwaves, xranges, Xcoords, Kcoords) where N
-
-        if all(@. ngrids ÷ 2 >= nwaves)
-            return new(ngrids, nwaves, xranges, Xcoords, Kcoords)
-        else
-            println("ERROR")
-        end
+                ngrids, xranges, Xcoords, Kcoords
+            ) where N
+        new(ngrids, xranges, Xcoords, Kcoords)
     end
 
     # EASY CONSTRUCTOR
     function ConfigFFT(
             ngrids::NTuple{N, Int},
-            nwaves::NTuple{N, Int},
             xranges::NTuple{N, NTuple{2, Float64}}
         ) where N
 
@@ -39,7 +34,7 @@ struct ConfigFFT{N}
         Kcoords = Kcoordsgen(ngrids, xranges)
 
         return ConfigFFT{N}(
-            ngrids, nwaves, xranges, Xcoords, Kcoords)
+            ngrids, xranges, Xcoords, Kcoords)
     end
 
 end
