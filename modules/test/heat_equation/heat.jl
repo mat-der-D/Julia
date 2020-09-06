@@ -2,7 +2,6 @@ include("../../generalFFT.jl")
 using Plots
 
 
-
 function init_cond!(x_u::XFunc{T,1} where T)
 
     c = x_u.config
@@ -14,7 +13,7 @@ end
 function time_develop(k_u::KFunc{T,1} where T, dt::Float64)
 
     config = k_u.config
-    k_K = k_Kgen(k_u.config)
+    k_K = k_Kgen(config)
     xrange = config.xranges[1]
     xlen = xrange[2] - xrange[1]
 
@@ -33,7 +32,7 @@ function main()
     init_cond!(x_u)
     k_u = k_x(x_u)
 
-    x_X = c.Xcoords[1]
+    Xcoord = c.Xcoords[1]
     # plot(x_X, x_u.vals)
 
     t_st = 0.
@@ -45,7 +44,7 @@ function main()
 
     for it = 0:nt
         x_u = x_k(k_u)
-        plt = plot(x_X, x_u.vals,
+        plt = plot(Xcoord, x_u.vals,
                 ylims=(0., 0.25), labels="heat")
         frame(anim, plt)
         if it < nt
