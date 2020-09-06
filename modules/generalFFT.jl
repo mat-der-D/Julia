@@ -15,19 +15,23 @@ struct ConfigFFT{T<:Union{Float64,Complex{Float64}},N}
                     # X-coordinates
     Kcoords::NTuple{N,Array{Complex{Float64},N}}
                     # K-coordinates
+    cut_zigzag_mode::Bool
 
     # CONSTRUCTOR
     function ConfigFFT{T,N}(
-                ngrids, xranges, Xcoords, Kcoords
+                ngrids, xranges, Xcoords, Kcoords;
+                cut_zigzag_mode=true
             ) where N where T
-        new(ngrids, xranges, Xcoords, Kcoords)
+        new(ngrids, xranges, Xcoords, Kcoords,
+            cut_zigzag_mode)
     end
 
     # EASY CONSTRUCTOR
     function ConfigFFT(
             ngrids::NTuple{N,Int},
             xranges::NTuple{N,NTuple{2,Float64}};
-            use_complex::Bool=false
+            use_complex::Bool=false,
+            cut_zigzag_mode::Bool=true
         ) where N
 
         T = use_complex ? Complex{Float64} : Float64
@@ -37,7 +41,8 @@ struct ConfigFFT{T<:Union{Float64,Complex{Float64}},N}
         Kcoords = Kcoordsgen(ngrids, xranges)
 
         return ConfigFFT{T,N}(
-            ngrids, xranges, Xcoords, Kcoords)
+            ngrids, xranges, Xcoords, Kcoords,
+            cut_zigzag_mode=cut_zigzag_mode)
     end
 
 end
@@ -63,7 +68,7 @@ function Xcoordgen(
     xrange = xranges[axis]
     _Xcoordgen(indices) = (
         (  (indices[axis] - 1)*xrange[2]
-         - (indices[axis] - 2)*xrange[1] ) / ngrid
+         + (ngrid - indices[axis] + 1)*xrange[1] ) / ngrid
     )
     return _Xcoordgen.(CartesianIndices(ngrids))
 
@@ -182,7 +187,7 @@ mutable struct KFunc{T,N} <: AbstractArray{Complex{Float64},N}
     # CONSTRUCTOR
     function KFunc{T,N}(
                 vals::Array{Complex{Float64},N},
-                config::ConfigFFT{N}
+                config::ConfigFFT{T,N}
             ) where N where T
 
         if size(vals) == config.ngrids
@@ -606,7 +611,19 @@ end
 # *******************************************
 #  Fourier Transformation
 # *******************************************
-K_X(f::XFunc) = KFunc(fft(f.vals), f.config)
+function K_X(f::XFunc{T,N}) where T where N
+
+    g = KFunc(fft(f.vals), f.config)
+
+    if f.config.cut_zigzag_mode
+        ngrids = f.config.ngrids
+        max_nwaves = @. ngrids ÷ 2 - 1
+        lowpass_K!(g, max_nwaves)
+    end
+
+    return g
+end
+
 
 function X_K(f::KFunc{T,N}) where N where T
     if T <: Real
