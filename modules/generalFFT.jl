@@ -241,7 +241,7 @@ Base.:copy(f::KFunc) = KFunc(copy(f.vals), f.config)
 # *******************************************
 #  Binomial Operators
 # *******************************************
-BINOP = (
+const BINOP = (
     (:+, :.+), (:-, :.-), (:*, :.*),
     (:/, :./), (:\, :.\), (:^, :.^)
 )
@@ -302,61 +302,34 @@ end
 #  Coordinate Tools for specific dimensions
 # *******************************************
 # +++++ Coordinate in X-space ++++++++++
-function x_Xgen(config::ConfigFFT{T,1}) where T
-    XFunc(copy(config.Xcoords[1]), config)
-end
+const XKGENS = (
+    (:x_Xgen, :k_Kgen, 1, 1),
+    (:xy_Xgen, :kl_Kgen, 2, 1),
+    (:xy_Ygen, :kl_Lgen, 2, 2),
+    (:xyz_Xgen, :klm_Kgen, 3, 1),
+    (:xyz_Ygen, :klm_Lgen, 3, 2),
+    (:xyz_Zgen, :klm_Mgen, 3, 3)
+)
 
-function xy_Xgen(config::ConfigFFT{T,2}) where T
-    XFunc(copy(config.Xcoords[1]), config)
-end
+for (fnx, fnk, dim, axis) = XKGENS
+    @eval begin
+        # X generators
+        function $fnx(config::ConfigFFT{T,$dim}) where T
+            XFunc(copy(config.Xcoords[$axis]), config)
+        end
 
-function xy_Ygen(config::ConfigFFT{T,2}) where T
-    XFunc(copy(config.Xcoords[2]), config)
-end
-
-function xyz_Xgen(config::ConfigFFT{T,3}) where T
-    XFunc(copy(config.Xcoords[1]), config)
-end
-
-function xyz_Ygen(config::ConfigFFT{T,3}) where T
-    XFunc(copy(config.Xcoords[2]), config)
-end
-
-function xyz_Zgen(config::ConfigFFT{T,3}) where T
-    XFunc(copy(config.Xcoords[3]), config)
-end
-
-
-# +++++ Coordinate in K-space ++++++++++
-function k_Kgen(config::ConfigFFT{T,1}) where T
-    KFunc(copy(config.Kcoords[1]), config)
-end
-
-function kl_Kgen(config::ConfigFFT{T,2}) where T
-    KFunc(copy(config.Kcoords[1]), config)
-end
-
-function kl_Lgen(config::ConfigFFT{T,2}) where T
-    KFunc(copy(config.Kcoords[2]), config)
-end
-
-function klm_Kgen(config::ConfigFFT{T,3}) where T
-    KFunc(copy(config.Kcoords[1]), config)
-end
-
-function klm_Lgen(config::ConfigFFT{T,3}) where T
-    KFunc(copy(config.Kcoords[2]), config)
-end
-
-function klm_Mgen(config::ConfigFFT{T,3}) where T
-    KFunc(copy(config.Kcoords[3]), config)
+        # K generators
+        function $fnk(config::ConfigFFT{T,$dim}) where T
+            KFunc(copy(config.Kcoords[$axis]), config)
+        end
+    end
 end
 
 
 # *******************************************
 #  Elementary Functions
 # *******************************************
-ELEMFUNC = (
+const ELEMFUNC = (
     :sin, :cos, :tan, :cot, :sec, :csc,
     :sinh, :cosh, :tanh, :coth, :sech, :csch,
     :asin, :acos, :atan, :acot, :asec, :acsc,
@@ -376,7 +349,7 @@ end
 # *******************************************
 #  Operators for Complex Numbers
 # *******************************************
-OPERATOR = (
+const OPERATOR = (
     :real, :imag, :reim, :conj
 )
 
@@ -386,7 +359,6 @@ for op = OPERATOR
         Base.$op(f::KFunc) = KFunc($op(f.vals), f.config)
     end
 end
-
 
 # *******************************************
 #  Low/High-pass Filter
@@ -402,7 +374,6 @@ function pass_K!(
     f.vals -= vals
 
 end
-
 
 # +++++ high-pass filter +++++
 function highpass_K!(
@@ -434,7 +405,6 @@ function K_highpass_K(
     return g
 
 end
-
 
 # +++++ low-pass filter +++++
 function lowpass_K!(
@@ -481,44 +451,22 @@ end
 # helper funtcion
 make_slice(x::Int, y::Int) = x:y
 
-
 # +++++ aliases for specific dimensins +++++
-# @@@ high-pass filter @@@
-function k_highpass_k(
-            f::KFunc{T,1}, min_nwaves::Tuple{Int}
-        ) where T
-    K_highpass_K(f, min_nwaves)
-end
+const PASSFILTERS = (
+    (:k_highpass_k, 1, :K_highpass_K),
+    (:kl_highpass_k, 2, :K_highpass_K),
+    (:klm_highpass_klm, 3, :K_highpass_K),
+    (:k_lowpass_k, 1, :K_lowpass_K),
+    (:kl_lowpass_kl, 2, :K_lowpass_K),
+    (:klm_lowpass_klm, 3, :K_lowpass_K)
+)
 
-function kl_highpass_kl(
-            f::KFunc{T,2}, min_nwaves::NTuple{2, Int}
-        ) where T
-    K_highpass_K(f, min_nwaves)
-end
-
-function klm_highpass_klm(
-            f::KFunc{T,3}, min_nwaves::NTuple{3,Int}
-        ) where T
-    K_highpass_K(f, min_nwaves)
-end
-
-# @@@ low-pass filter @@@
-function k_lowpass_k(
-            f::KFunc{T,1}, max_nwaves::Tuple{Int}
-        ) where T
-    K_lowpass_K(f, max_nwaves)
-end
-
-function kl_lowpass_kl(
-            f::KFunc{T,2}, max_nwaves::NTuple{2,Int}
-        ) where T
-    K_lowpass_K(f, max_nwaves)
-end
-
-function klm_lowpass_klm(
-            f::KFunc{T,3}, max_nwaves::NTuple{3,Int}
-        ) where T
-    K_lowpass_K(f, max_nwaves)
+for (fn, dim, fnK) = PASSFILTERS
+    @eval begin
+        KF = KFunc{T,$dim} where T
+        NT = NTuple{$dim,Int}
+        $fn(f::KF, nwaves::NT) = $fnK(f, nwaves)
+    end
 end
 
 
@@ -539,7 +487,7 @@ function K_dealiasedprod_32_K_K(
 
     fvals_pad = padding(f)
     gvals_pad = padding(g)
-    if T == Float64
+    if T <: Real
         fgvals_pad = fft(
             real(ifft(fvals_pad)) .* real(ifft(gvals_pad))
         )
@@ -640,7 +588,6 @@ function K_X(f::XFunc{T,N}) where T where N
     return g
 end
 
-
 function X_K(f::KFunc{T,N}) where N where T
     if T <: Real
         XFunc(real(ifft(f.vals)), f.config)
@@ -649,14 +596,15 @@ function X_K(f::KFunc{T,N}) where N where T
     end
 end
 
-k_x(f::XFunc{T,1} where T) = K_X(f)
-x_k(f::KFunc{T,1} where T) = X_K(f)
-
-kl_xy(f::XFunc{T,2} where T) = K_X(f)
-xy_kl(f::KFunc{T,2} where T) = X_K(f)
-
-klm_xyz(f::XFunc{T,3} where T) = K_X(f)
-xyz_klm(f::KFunc{T,3} where T) = X_K(f)
+const FFTS = (
+    (:k_x, :x_k, 1),
+    (:kl_xy, :xy_kl, 2),
+    (:klm_xyz, :xyz_klm, 3)
+)
+for (kx, xk, dim) = FFTS
+    @eval $kx(f::XFunc{T,$dim} where T) = K_X(f)
+    @eval $xk(f::KFunc{T,$dim} where T) = X_K(f)
+end
 
 
 # *******************************************
@@ -674,69 +622,78 @@ function ∂Xaxis_K!(f::KFunc, axis::Int)
 
 end
 
-∂x_k!(k_func::KFunc{T,1} where T) = ∂Xaxis_K!(k_func, 1)
+const DIFFK! = (
+    (:∂x_k!, 1, 1),
+    (:∂x_kl!, 2, 1), (:∂y_kl!, 2, 2),
+    (:∂x_klm!, 3, 1), (:∂y_klm!, 3, 2), (:∂z_klm!, 3, 3)
+)
 
-∂x_kl!(kl_func::KFunc{T,2} where T) = ∂Xaxis_K!(kl_func, 1)
-∂y_kl!(kl_func::KFunc{T,2} where T) = ∂Xaxis_K!(kl_func, 2)
-
-∂x_klm!(klm_func::KFunc{T,3} where T) = ∂Xaxis_K!(klm_func, 1)
-∂y_klm!(klm_func::KFunc{T,3} where T) = ∂Xaxis_K!(klm_func, 2)
-∂z_klm!(klm_func::KFunc{T,3} where T) = ∂Xaxis_K!(klm_func, 3)
+for (op!, dim, axis) = DIFFK!
+    @eval $op!(f::KFunc{T,$dim}) where T = ∂Xaxis_K!(f, $axis)
+end
 
 # +++++ non-destructive +++++
 function K_∂Xaxis_K(f::KFunc, axis::Int)
-
     g = copy(f)
     ∂Xaxis_K!(g, axis)
     return g
-
 end
 
 function X_∂Xaxis_X(f::XFunc, axis::Int)
-    return X_K(K_∂Xaxis_K(K_X(f), axis))
+    X_K(K_∂Xaxis_K(K_X(f), axis))
 end
 
 function K_laplacian_K(f::KFunc{T,N} where T where N)
-
     return sum(
         K_∂Xaxis_K(K_∂Xaxis_K(f, axis), axis)
         for axis = 1:N
     )
-
 end
 
 K_Δ_K = K_laplacian_K
 X_laplacian_X = X_K ∘ K_laplacian_K ∘ K_X
 X_Δ_X = X_laplacian_X
 
-# aliases
-# 1-dimensional
-k_∂x_k(k_func::KFunc{T,1} where T) = K_∂Xaxis_K(k_func, 1)
-x_∂x_x(x_func::XFunc{T,1} where T) = X_∂Xaxis_X(x_func, 1)
+# +++ aliases +++
+# differentiation
+const DIFFS = (
+    (:k_∂x_k, :x_∂x_x, 1, 1),
+    (:kl_∂x_kl, :xy_∂x_xy, 2, 1),
+    (:kl_∂y_kl, :xy_∂y_xy, 2, 2),
+    (:klm_∂x_klm, :xyz_∂x_xyz, 3, 1),
+    (:klm_∂y_klm, :xyz_∂y_xyz, 3, 2),
+    (:klm_∂z_klm, :xyz_∂z_xyz, 3, 3)
+)
 
-# 2-dimensional
-kl_∂x_kl(kl_func::KFunc{T,2} where T) = K_∂Xaxis_K(kl_func, 1)
-kl_∂y_kl(kl_func::KFunc{T,2} where T) = K_∂Xaxis_K(kl_func, 2)
-kl_laplacian_kl(kl_func::KFunc{T,2} where T) = K_laplacian_K(kl_func)
-kl_Δ_kl = kl_laplacian_kl
+for (opk, opx, dim, axis) = DIFFS
+    @eval begin
+        KF = KFunc{T,$dim} where T
+        $opk(f::KF) = K_∂Xaxis_K(f, $axis)
+        XF = XFunc{T,$dim} where T
+        $opx(f::XF) = X_∂Xaxis_X(f, $axis)
+    end
+end
 
-xy_∂x_xy(xy_func::XFunc{T,2} where T) = X_∂Xaxis_X(xy_func, 1)
-xy_∂y_xy(xy_func::XFunc{T,2} where T) = X_∂Xaxis_X(xy_func, 2)
-xy_laplacian_xy(xy_func::XFunc{T,2} where T) = X_laplacian_X(xy_func)
-xy_Δ_xy = xy_laplacian_xy
+# laplacian
+const LAPLA = (
+    (:k_laplacian_k, :x_laplacian_x,
+        :k_Δ_k, :x_Δ_x, 1),
+    (:kl_laplacian_kl, :xy_laplacian_xy,
+        :kl_Δ_kl, :xy_Δ_xy, 2),
+    (:klm_laplacian_klm, :xyz_laplacian_xyz,
+        :klm_Δ_klm, :xyz_Δ_xyz, 3),
+)
 
-# 3-dimensional
-klm_∂x_klm(klm_func::KFunc{T,3} where T) = K_∂Xaxis_K(klm_func, 1)
-klm_∂y_klm(klm_func::KFunc{T,3} where T) = K_∂Xaxis_K(klm_func, 2)
-klm_∂z_klm(klm_func::KFunc{T,3} where T) = K_∂Xaxis_K(klm_func, 3)
-klm_laplacian_klm(klm_func::KFunc{T,3} where T) = K_laplacian_K(klm_func)
-klm_Δ_klm = klm_laplacian_klm
-
-xyz_∂x_xyz(xyz_func::KFunc{T,3} where T) = X_∂Xaxis_X(xyz_func, 1)
-xyz_∂y_xyz(xyz_func::KFunc{T,3} where T) = X_∂Xaxis_X(xyz_func, 2)
-xyz_∂z_xyz(xyz_func::KFunc{T,3} where T) = X_∂Xaxis_X(xyz_func, 3)
-xyz_laplacian_xyz(xyz_func::XFunc{T,3} where T) = X_laplacian_X(xyz_func)
-xyz_Δ_xyz = xyz_laplacian_xyz
+for (klap, xlap, kΔ, xΔ, dim) = LAPLA
+    @eval begin
+        KF = KFunc{T,$dim} where T
+        $klap(f::KF) = K_laplacian_K(f)
+        XF = XFunc{T,$dim} where T
+        $xlap(f::XF) = X_laplacian_X(f)
+        $kΔ = $klap
+        $xΔ = $xlap
+    end
+end
 
 # +++ tools for vector analysis +++
 # 2-dimensional
@@ -851,14 +808,17 @@ function l2inpr_X_X(f::XFunc{T,N}, g::XFunc{T,N}) where N where T
 end
 
 # aliases
-integ_x(x_func::XFunc{T,1} where T) = integ_X(x_func)
-integ_xy(xy_func::XFunc{T,2} where T) = integ_X(xy_func)
-integ_xyz(xyz_func::XFunc{T,3} where T) = integ_X(xyz_func)
+const TOOLS = (
+    (:integ_x, :norm_x, :l2inpr_x_x, 1),
+    (:integ_xy, :norm_xy, :l2inpr_xy_xy, 2),
+    (:integ_xyz, :norm_xyz, :l2inpr_xyz_xyz, 3)
+)
 
-norm_x(x_func::XFunc{T,1} where T, p::Real=2) = norm_X(x_func, p)
-norm_xy(xy_func::XFunc{T,2} where T, p::Real=2) = norm_X(xy_func, p)
-norm_xyz(xyz_func::XFunc{T,3} where T, p::Real=2) = norm_X(xyz_func, p)
-
-l2inpr_x_x(x_f::XFunc{T,1}, x_g::XFunc{T,1}) where T = l2inpr_X_X(x_f, x_g)
-l2inpr_xy_xy(xy_f::XFunc{T,2}, xy_g::XFunc{T,2}) where T = l2inpr_X_X(xy_f, xy_g)
-l2inpr_xyz_xyz(xyz_f::XFunc{T,3}, xyz_g::XFunc{T,3}) where T = l2inpr_X_X(xyz_f, xyz_g)
+for (integ, norm, inpr, dim) = TOOLS
+    @eval begin
+        XF = XFunc{T,$dim} where T
+        $integ(f::XF) = integ_X(f)
+        $norm(f::XF, p::Real=2) = norm_X(f, p)
+        $inpr(f::XF, g::XF) = l2inpr_X_X(f, g)
+    end
+end
