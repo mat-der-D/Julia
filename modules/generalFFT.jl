@@ -443,11 +443,9 @@ function lowpass_K!(
         ) where N where T
 
     ngrids = f.config.ngrids
-    nshifts = @. (ngrids - 1) ÷ 2
-    circshift!(f.vals, copy(f.vals), nshifts) # SHIFT
+    f.vals .= fftshift(f.vals)
 
-    center_indices = @. (ngrids + 1) ÷ 2
-
+    center_indices = @. ngrids ÷ 2 + 1
     if any(max_nwaves .< 0)
         println("WARNING: all waves are suppressed")
         f.vals .= 0.
@@ -465,8 +463,7 @@ function lowpass_K!(
         pass_K!(f, slices)
     end
 
-    ndeshifts = .-(tuple(nshifts...))
-    circshift!(f.vals, copy(f.vals), ndeshifts) # DESHIFT
+    f.vals .= ifftshift(f.vals)
 
 end
 
