@@ -563,13 +563,15 @@ function padding(f::KFunc)
     ngrids = config.ngrids
     pad_ngrids = @. ngrids ÷ 2 * 3
 
-    nshifts = @. (ngrids - 1) ÷ 2
-    vals_shift = circshift(f.vals, nshifts) # SHIFT
+    nshifts = @. pad_ngrids÷2 - ngrids÷2
+    min_nwaves = @. nshifts + 1
+    max_nwaves = @. nshifts + ngrids
+    slices = make_slice.(min_nwaves, max_nwaves)
 
+    vals_shift = fftshift(f.vals)
     padded = zeros(Complex{Float64}, pad_ngrids)
-    padded[Base.OneTo.(ngrids)...] = vals_shift
-    ndeshifts = .-(tuple(nshifts...))
-    circshift!(padded, copy(padded), ndeshifts) # DESHIFT
+    padded[slices...] = vals_shift
+    padded .= ifftshift(padded)
 
     return padded
 end
