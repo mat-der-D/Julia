@@ -584,13 +584,12 @@ function truncate(
     ngrids = config.ngrids
     pad_ngrids = @. ngrids ÷ 2 * 3
 
-    nshifts = @. (ngrids - 1) ÷ 2
-    circshift!(padded, copy(padded), nshifts) # SHIFT
+    nshifts = @. pad_ngrids÷2 - ngrids÷2
+    min_nwaves = @. nshifts + 1
+    max_nwaves = @. nshifts + ngrids
+    slices = make_slice.(min_nwaves, max_nwaves)
 
-    ndeshifts = .-(tuple(nshifts...))
-    vals = circshift(
-        padded[Base.OneTo.(ngrids)...], ndeshifts
-    )
+    vals = ifftshift(fftshift(padded)[slices...])
 
     N_origin = prod(ngrids)
     N_padded = prod(pad_ngrids)
