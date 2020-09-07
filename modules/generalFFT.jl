@@ -563,10 +563,7 @@ function padding(f::KFunc)
     ngrids = config.ngrids
     pad_ngrids = @. ngrids ÷ 2 * 3
 
-    nshifts = @. pad_ngrids÷2 - ngrids÷2
-    min_nwaves = @. nshifts + 1
-    max_nwaves = @. nshifts + ngrids
-    slices = make_slice.(min_nwaves, max_nwaves)
+    slices = slices_padded_core(ngrids, pad_ngrids)
 
     vals_shift = fftshift(f.vals)
     padded = zeros(Complex{Float64}, pad_ngrids)
@@ -584,6 +581,8 @@ function truncate(
     ngrids = config.ngrids
     pad_ngrids = @. ngrids ÷ 2 * 3
 
+    slices = slices_padded_core(ngrids, pad_ngrids)
+
     nshifts = @. pad_ngrids÷2 - ngrids÷2
     min_nwaves = @. nshifts + 1
     max_nwaves = @. nshifts + ngrids
@@ -596,6 +595,19 @@ function truncate(
     vals *= N_padded / N_origin
 
     return vals
+
+end
+
+# helper function
+function slices_padded_core(
+        ngrids::NTuple{N1,Int},
+        pad_ngrids::NTuple{N2,Int}
+    ) where N1 where N2
+
+    nshifts = @. pad_ngrids÷2 - ngrids÷2
+    min_nwaves = @. nshifts + 1
+    max_nwaves = @. nshifts + ngrids
+    return make_slice.(min_nwaves, max_nwaves)
 
 end
 
