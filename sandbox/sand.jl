@@ -1,30 +1,11 @@
-using LinearAlgebra
-
-mutable struct MyArray <: AbstractArray{Int, 2}
-
-        vals::Matrix{Int}
-
+function my_func(x::NTuple{N,Int}) where N
+    x[1]
 end
-Base.size(A::MyArray) = size(A.vals)
-Base.getindex(A::MyArray, i::Int) = A.vals[i]
-Base.getindex(A::MyArray, I::Vararg{Int, 2}) = A.vals[I...]
-Base.setindex!(A::MyArray, v, i::Int) = setindex!(A, v, i)
-Base.setindex!(A::MyArray, v, I::Vararg{Int, 2}) = setindex!(A, v, I...)
-a = MyArray([1 2; 3 4])
-b = MyArray([5 6; 7 8])
 
-BINOP = ((:*, :.*), (:+, :.+), (:^, :.^))
+OPNAMES = ((:my1, 1), (:my2, 2))
 
-for (op, opd) = BINOP
+for (op, dim) = OPNAMES
     @eval begin
-        Base.$op(A::MyArray, B::MyArray) = (
-            MyArray($opd(A.vals, B.vals))
-        )
-        Base.$op(A::MyArray, a::Real) = (
-            MyArray($opd(A.vals, a))
-        )
-        Base.$op(a::Real, B::MyArray) = (
-            MyArray($opd(a, B.vals))
-        )
+        $op(x::NTuple{$dim,Int}) = my_func(x)
     end
 end
