@@ -542,9 +542,15 @@ function K_dealiasedprod_32_K_K(
 
     fvals_pad = padding(f)
     gvals_pad = padding(g)
-    fgvals_pad = fft(
-        T.(ifft(fvals_pad)) .* T.(ifft(gvals_pad))
-    )
+    if T == Float64
+        fgvals_pad = fft(
+            real(ifft(fvals_pad)) .* real(ifft(gvals_pad))
+        )
+    else
+        fgvals_pad = fft(
+            ifft(fvals_pad) .* ifft(gvals_pad)
+        )
+    end
     fgvals = truncate(fgvals_pad, f.config)
 
     return KFunc(fgvals, f.config)
